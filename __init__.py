@@ -1,5 +1,5 @@
 from BaseClasses import Tutorial
-from worlds.AutoWorld import WebWorld
+from worlds.AutoWorld import WebWorld, World
 from .options import wii_party_option_groups
 
 

@@ -3,7 +3,7 @@ from Options import Choice, OptionSet, PerGameCommonOptions, Range, Toggle, Defa
 
 class PartyGames(OptionSet):
     """Which party games do you want included?
-(Board Game Island, Globe Trot, Swap Meet, Spin-Off, Bingo)"""
+(Board Game Island, Globe Trot, Swap Meet (Mii of a Kind), Spin-Off, Bingo)"""
     display_name = "Party Games"
     valid_keys = {"Board Game Island", "Globe Trot", "Swap Meet", "Spin-Off", "Bingo"}
     default = {"Board Game Island", "Globe Trot", "Swap Meet", "Spin-Off", "Bingo"}
@@ -22,6 +22,9 @@ class SkluckMinigames(DefaultOnToggle):
 
 
 wii_party_option_groups = [
+    OptionGroup("Party Game Options", [
+        PartyGames,
+    ]),
     OptionGroup("Minigame Options", [
         SkillMinigames,
         LuckMinigames,
@@ -32,6 +35,7 @@ wii_party_option_groups = [
 
 @dataclass
 class WiiPartyOptions(PerGameCommonOptions):
+    party_games: PartyGames
     skill_minigames: SkillMinigames
     luck_minigames: LuckMinigames
     skluck_minigames: SkluckMinigames
