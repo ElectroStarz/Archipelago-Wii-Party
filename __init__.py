@@ -1,7 +1,26 @@
+from collections.abc import Mapping
+from typing import Any
 from BaseClasses import Tutorial
-from Options import OptionError
+import pkgutil
+import json
 from worlds.AutoWorld import WebWorld, World
 from .options import wii_party_option_groups, WiiPartyOptions
+from . import components, items, locations, regions, rules
+from .items import auto_item_groups, ITEM_NAME_TO_ID
+from .locations import auto_location_groups, LOCATION_NAME_TO_ID
+
+
+# Find world version
+
+# Read the file data from the APWorld
+data = pkgutil.get_data(__name__, "archipelago.json")
+
+if data is not None:
+    file = json.loads(data.decode("utf-8"))
+    WORLD_VERSION = file["world_version"]
+else:
+    raise FileNotFoundError("Could not find archipelago.json in the APWorld!")
+
 
 
 class WiiPartyWebWorld(WebWorld):
@@ -63,7 +82,7 @@ class WiiPartyWorld(World):
     def create_items(self) -> None:
         items.create_all_items(self)
 
-    def create_item(self, name: str) -> items.MSMItem:
+    def create_item(self, name: str) -> items.WPItem:
         return items.create_item_with_correct_classification(self, name)
 
     def get_filler_item_name(self) -> str:
@@ -73,25 +92,6 @@ class WiiPartyWorld(World):
     def fill_slot_data(self) -> Mapping[str, Any]:
         slot_data = {
         "version": WORLD_VERSION,
-        "goal_condition": self.options.goal_condition.value,
-        "behemoth_hp": self.options.behemoth_hp.value,
-        "behemoth_king_hp": self.options.behemoth_king_hp.value,
-
-
-        "sports_mix_unlock": self.options.sports_mix_unlock.value,
-        "exhibition_difficulty": self.options.exhibition_difficulty.value,
-        "hard_tournament_difficulty": self.options.hard_tournament_difficulty.value,
-        "character_sanity": self.options.character_sanity.value,
-        "send_both_character_sanity": self.options.send_both_character_sanity.value,
-
-
-        "deathlink": self.options.deathlink.value,
-        "deathlink_action": self.options.deathlink_action.value,
-        "deathlink_consequence": self.options.deathlink_consequence.value,
-        "deathlink_opponent_get_points": self.options.deathlink_opponent_get_points.value,
-        "deathlink_opponent_scores_points": self.options.deathlink_opponent_scores_points.value,
-        "deathlink_boss_health_recovered": self.options.deathlink_boss_health_recovered.value,
-        "deathlink_dodgeball_health_lost": self.options.deathlink_dodgeball_health_lost.value,
         }
 
         return slot_data

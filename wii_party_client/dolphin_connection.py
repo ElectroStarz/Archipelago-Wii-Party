@@ -24,13 +24,13 @@ class DolphinClient:
 
     @staticmethod
     def check_for_dolphin():
-        if Utils.is_windows():
+        if Utils.is_windows:
             target_processes = ["Dolphin.exe", "DolphinQt2.exe"]
 
-        elif Utils.is_macos():
+        elif Utils.is_macos:
             target_processes = ["Dolphin"]
 
-        elif Utils.is_linux():
+        elif Utils.is_linux:
             target_processes = ["dolphin-emu", "dolphin-emu-qt2", "dolphin-emu-wx"]
 
         else:

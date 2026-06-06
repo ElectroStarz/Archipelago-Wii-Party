@@ -3,7 +3,6 @@ import multiprocessing
 
 import Utils
 from CommonClient import get_base_parser, gui_enabled, handle_url_arg, server_loop
-
 from .WPContext import WPContext, logger
 
 
@@ -12,7 +11,7 @@ def launch_wii_party_client(*args):
 
     async def main(main_args):
         multiprocessing.freeze_support()
-
+        logger.info("main")
         main_parser = get_base_parser()
         parser_args = main_parser.parse_args()
 

@@ -1,4 +1,4 @@
-from typing import Dict, NamedTuple, TYPE_CHECKING
+from typing import Dict, NamedTuple, Optional, TYPE_CHECKING
 from BaseClasses import Item, ItemClassification as IC
 from enum import Enum
 from .options import *
@@ -10,17 +10,20 @@ class WPItem(Item):
     game: str = "Wii Party"
 
 class ItemGroup(str, Enum):
-    BGI = "Board Game Island"
-    GLOBE_TROT = "Globe Trot"
-    MII_OF_A_KIND = "Mii Of A Kind"
-    SPIN_OFF = "Spin-Off"
-    BINGO = "Bingo"
+    BGI = "Board Game Island Items"
+    GLOBE_TROT = "Globe Trot Items"
+    MII_OF_A_KIND = "Mii Of A Kind Items"
+    SPIN_OFF = "Spin-Off Items"
+    BINGO = "Bingo Items"
 
     # Minigames
     FOUR_PLAYER_MINIGAMES = "4 Player Minigames"
     ONE_VS_THREE_MINIGAMES = "1 vs 3 Minigames"
     ONE_VS_ONE_MINIGAMES = "1 vs 1 Minigames"
     PAIR_MINIGAMES = "Pair Minigames"
+
+    FILLER = "Filler"
+    TRAPS = "Traps"
 
 class ItemData(NamedTuple):
     code: int
@@ -143,9 +146,13 @@ skill_and_luck_4_minigames = {
 
 
 
-filler = {}
+filler = {
+    "Test Filler": ItemData(base_id + 10000, IC.filler, ItemGroup.FILLER)
+}
 
-traps = {}
+traps = {
+    "Test Trap": ItemData(base_id + 1025, IC.trap, ItemGroup.TRAPS),
+}
 
 item_table: Dict[str, ItemData] = {
     **bgi_items,
@@ -155,11 +162,14 @@ item_table: Dict[str, ItemData] = {
     **bingo_items,
     **skill_4_minigames,
     **luck_4_minigames,
+    **precision_4_minigames,
     **puzzle_4_minigames,
     **skill_and_luck_4_minigames,
+    **filler,
+    **traps,
 }
 
-ITEM_NAME_TO_ID: Dict[str, int] = {item_name: data.code for item_name, data in item_table.items()}
+ITEM_NAME_TO_ID: Dict[str, int] = {item_name: item_data.code for item_name, item_data in item_table.items()}
 
 auto_item_groups = {}
 
@@ -206,7 +216,7 @@ def create_all_items(world: "WiiPartyWorld") -> None:
         if name in party_game_mapping:
             game_item_dict = party_game_mapping[name]
 
-            for item_name, data in game_item_dict:
+            for item_name in game_item_dict:
                 ap_item = world.create_item(item_name)
                 itempool.append(ap_item)
 

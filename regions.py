@@ -14,7 +14,7 @@ def create_and_connect_regions(world: "WiiPartyWorld") -> None:
 def create_all_regions(world: "WiiPartyWorld") -> None:
     main_menu = Region("Main Menu", world.player, world.multiworld)
     bgi = Region("Board Game Island", world.player, world.multiworld)
-    globe_trot = Region("Board Game Island", world.player, world.multiworld)
+    globe_trot = Region("Globe Trot", world.player, world.multiworld)
     mii_of_a_kind = Region("Mii Of A Kind", world.player, world.multiworld)
     spin_off = Region("Spin-Off", world.player, world.multiworld)
     bingo = Region("Bingo", world.player, world.multiworld)
