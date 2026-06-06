@@ -194,6 +194,14 @@ def create_all_items(world: "WiiPartyWorld") -> None:
         "Bingo": bingo_items
     }
 
+    world_to_var = {
+        SkillMinigames: world.options.skill_minigames,
+        LuckMinigames: world.options.luck_minigames,
+        SkluckMinigames: world.options.skluck_minigames,
+        PrecisionMinigames: world.options.precision_minigames,
+        PuzzleMinigames: world.options.puzzle_minigames,
+    }
+
     for name in world.options.party_games.value:
         if name in party_game_mapping:
             game_item_dict = party_game_mapping[name]
@@ -212,7 +220,8 @@ def create_all_items(world: "WiiPartyWorld") -> None:
 
     if world.options.four_player_minigames == FourPlayerMinigames.option_true:
         for type in minigame_type_options:
-            if type.option_true:
+            world_var = world_to_var[type]
+            if world_var == type.option_true:
                 minigame_item_dict = four_minigame_type_mapping[type]
 
                 for item_name in minigame_item_dict:

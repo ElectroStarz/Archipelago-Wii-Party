@@ -7,6 +7,11 @@ import psutil
 
 GAME_VERSION = None
 
+SUPPORTED_GAME_IDS = {
+    "SUPE01": "NTSC-U",
+    "SUPP01": "PAL",
+}
+
 class DolphinException(Exception):
     pass
 
@@ -67,39 +72,12 @@ class DolphinClient:
             if dolphin_status == 0:
                 self.logger.info("Failed to hook! Dolphin isn't running!")
             elif dolphin_status == 1:
-                self.logger.info("Failed to hook! Mario Sports Mix isn't running!")
+                self.logger.info("Failed to hook! Wii Party isn't running!")
             elif dolphin_status == 2:
                 self.logger.info("Failed to hook! Too many Dolphin instances are running!")
 
             self.attempt += 1
             await asyncio.sleep(5)
-
-    def check_region(self):
-        global GAME_VERSION
-
-        byte = self.read_bytes(0x80000000, 6)
-        decoded = byte.decode("utf-8", errors="ignore")
-
-        if decoded == "SUPE01":
-            detected_version = "PAL"
-        elif decoded == "SUPP01":
-            detected_version = "NTSC-U"
-        else:
-            GAME_VERSION = None
-            self.told_region = False
-            self.logger.info(f"Unsupported or unreadable game ID: {decoded!r}")
-            return False
-
-        if GAME_VERSION != detected_version:
-            self.told_region = False
-
-        GAME_VERSION = detected_version
-        if not self.told_region:
-            self.logger.info(f"{detected_version} Detected!")
-            self.told_region = True
-
-        return True
-
 
     def is_hooked_class(self):
         if self.dme.is_hooked():
