@@ -5,9 +5,28 @@ import pkgutil
 import json
 from worlds.AutoWorld import WebWorld, World
 from .options import wii_party_option_groups, WiiPartyOptions
-from . import components, items, locations, regions, rules
+from . import items, locations, regions, rules
 from .items import auto_item_groups, ITEM_NAME_TO_ID
 from .locations import auto_location_groups, LOCATION_NAME_TO_ID
+from worlds.LauncherComponents import Component, Type, components, launch, icon_paths
+
+
+
+def run_client(*args: str) -> None:
+    from .wii_party_client.main_client import launch_wii_party_client as launch_wp_client
+
+
+    launch(launch_wp_client, name="Wii Party Client", args=args)
+
+components.append(
+    Component(
+        "Wii Party Client",
+        func=run_client,
+        game_name="Wii Party",
+        component_type=Type.CLIENT,
+        supports_uri=True,
+    )
+)
 
 
 # Find world version

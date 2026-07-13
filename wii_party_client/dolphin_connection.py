@@ -79,66 +79,69 @@ class DolphinClient:
             self.attempt += 1
             await asyncio.sleep(5)
 
-    def is_hooked_class(self):
+    def _assert_hooked(self):
+        if not self.dme.is_hooked():
+            raise DolphinException("Not hooked to Dolphin")
+
+    def is_hooked(self):
         if self.dme.is_hooked():
             return True
         else:
             return False
 
     def disconnect(self):
-        if self.dme.is_hooked():
-            self.dme.un_hook()
-
+        self._assert_hooked()
+        self.dme.un_hook()
 
     def read_byte(self, address: Any) -> Any:
-        self.dme.is_hooked()
+        self._assert_hooked()
         result = self.dme.read_byte(address)
         return result
 
     def read_bytes(self, address: Any, bytes_to_read: int) -> Any:
-        self.dme.is_hooked()
+        self._assert_hooked()
         result = self.dme.read_bytes(address, bytes_to_read)
         return result
 
     def read_word(self, address: Any) -> Any:
-        self.dme.is_hooked()
+        self._assert_hooked()
         result = self.dme.read_word(address)
         return result
 
     def read_float(self, address: Any) -> Any:
-        self.dme.is_hooked()
+        self._assert_hooked()
         result = self.dme.read_float(address)
         return result
 
     def read_string(self, address: int) -> str:
-        self.dme.is_hooked()
+        self._assert_hooked()
         byte = self.dme.read_bytes(address, 5)
         # Decode and strip out the invisible null bytes
         decoded = byte.decode("utf-8", errors="ignore").rstrip('\x00')
         return decoded
 
     def write_string(self, address: Any, string: str) -> Any:
-        self.dme.is_hooked()
+        self._assert_hooked()
         encoded = string.encode("utf-8")
         self.dme.write_byte(address, encoded)
 
     def write_byte(self, address: Any, data: Any):
-        self.dme.is_hooked()
+        self._assert_hooked()
         self.dme.write_byte(address, data)
 
     def write_bytes(self, address: Any, data: Any) -> Any:
-        self.dme.is_hooked()
+        self._assert_hooked()
         self.dme.write_bytes(address, data)
 
     def write_float(self, address: Any, data: Any):
-        self.dme.is_hooked()
+        self._assert_hooked()
         self.dme.write_float(address, data)
 
     def write_word(self, address: Any, data: Any):
-        self.dme.is_hooked()
+        self._assert_hooked()
         self.dme.write_word(address, data)
 
     def follow_pointers(self, address: Any, pointers: list):
-        self.dme.is_hooked()
+        self._assert_hooked()
         result = self.dme.follow_pointers(address, list(pointers))
         return result

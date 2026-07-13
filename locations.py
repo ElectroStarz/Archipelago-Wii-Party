@@ -15,6 +15,7 @@ class WPLocation(Location):
 
 class LocationData(NamedTuple):
     id: int
+    type: MinigameType | None
     group: WPGroup
 
 class WPGroup(str, Enum):
@@ -30,84 +31,118 @@ class WPGroup(str, Enum):
     BALANCE_BOAT = "Balance Boat Locations"
     MATCH_UP = "Match Up Locations"
 
-    # === Minigame Types ===
+    # === Minigame Categories ===
+    SKILL = "Skill"
+    REACTION = "Reaction"
+    LUCK = "Luck"
+    PRECISION = "Precision"
+    PUZZLE = "Puzzle"
+    SKLUCK = "Skill and Luck"
+
+
+class MinigameType(str, Enum):
     FOUR_PLAYER = "Four Player Locations"
-    ONE_V_THREE = "One v Three Locations"
-    ONE_V_ONE = "One v One Locations"
+    ONE_VS_THREE = "One vs Three Locations"
+    ONE_VS_ONE = "One vs One Locations"
     PAIR = "Pair Locations"
 
 def create_all_locations(world: "WiiPartyWorld") -> None:
-    # create_regular_locations(world)
-    # create_events(world)
-    pass
+    create_regular_locations(world)
+    create_events(world)
 
-base_loc_id = 1
+base_loc_id = 0
 
-bgi_locations: Dict[str, LocationData] = {
-    "Test 1": LocationData(base_loc_id + 0, WPGroup.BOARD_GAME_ISLAND),
-    "Test 2": LocationData(base_loc_id + 1, WPGroup.BOARD_GAME_ISLAND),
-    "Test 3": LocationData(base_loc_id + 2, WPGroup.BOARD_GAME_ISLAND),
-    "Test 4": LocationData(base_loc_id + 3, WPGroup.BOARD_GAME_ISLAND),
-    "Test 5": LocationData(base_loc_id + 4, WPGroup.BOARD_GAME_ISLAND),
-    "Test 6": LocationData(base_loc_id + 5, WPGroup.BOARD_GAME_ISLAND),
-    "Test 7": LocationData(base_loc_id + 6, WPGroup.BOARD_GAME_ISLAND),
-    "Test 8": LocationData(base_loc_id + 7, WPGroup.BOARD_GAME_ISLAND),
-    "Test 9": LocationData(base_loc_id + 8, WPGroup.BOARD_GAME_ISLAND),
-    "Test 10": LocationData(base_loc_id + 9, WPGroup.BOARD_GAME_ISLAND),
-    "Test 11": LocationData(base_loc_id + 10, WPGroup.BOARD_GAME_ISLAND),
-    "Test 12": LocationData(base_loc_id + 11, WPGroup.BOARD_GAME_ISLAND),
-    "Test 13": LocationData(base_loc_id + 12, WPGroup.BOARD_GAME_ISLAND),
-    "Test 14": LocationData(base_loc_id + 13, WPGroup.BOARD_GAME_ISLAND),
-    "Test 15": LocationData(base_loc_id + 14, WPGroup.BOARD_GAME_ISLAND),
-    "Test 16": LocationData(base_loc_id + 15, WPGroup.BOARD_GAME_ISLAND),
-    "Test 17": LocationData(base_loc_id + 16, WPGroup.BOARD_GAME_ISLAND),
-    "Test 18": LocationData(base_loc_id + 17, WPGroup.BOARD_GAME_ISLAND),
-    "Test 19": LocationData(base_loc_id + 18, WPGroup.BOARD_GAME_ISLAND),
-    "Test 20": LocationData(base_loc_id + 19, WPGroup.BOARD_GAME_ISLAND),
-    "Test 21": LocationData(base_loc_id + 20, WPGroup.BOARD_GAME_ISLAND),
-    "Test 22": LocationData(base_loc_id + 21, WPGroup.BOARD_GAME_ISLAND),
-    "Test 23": LocationData(base_loc_id + 22, WPGroup.BOARD_GAME_ISLAND),
-    "Test 24": LocationData(base_loc_id + 23, WPGroup.BOARD_GAME_ISLAND),
-    "Test 25": LocationData(base_loc_id + 24, WPGroup.BOARD_GAME_ISLAND),
-    "Test 26": LocationData(base_loc_id + 25, WPGroup.BOARD_GAME_ISLAND),
-    "Test 27": LocationData(base_loc_id + 26, WPGroup.BOARD_GAME_ISLAND),
-    "Test 28": LocationData(base_loc_id + 27, WPGroup.BOARD_GAME_ISLAND),
-    "Test 29": LocationData(base_loc_id + 28, WPGroup.BOARD_GAME_ISLAND),
-    "Test 30": LocationData(base_loc_id + 29, WPGroup.BOARD_GAME_ISLAND),
-    "Test 31": LocationData(base_loc_id + 30, WPGroup.BOARD_GAME_ISLAND),
-    "Test 32": LocationData(base_loc_id + 31, WPGroup.BOARD_GAME_ISLAND),
-    "Test 33": LocationData(base_loc_id + 32, WPGroup.BOARD_GAME_ISLAND),
-    "Test 34": LocationData(base_loc_id + 33, WPGroup.BOARD_GAME_ISLAND),
-    "Test 35": LocationData(base_loc_id + 34, WPGroup.BOARD_GAME_ISLAND),
-    "Test 36": LocationData(base_loc_id + 35, WPGroup.BOARD_GAME_ISLAND),
-    "Test 37": LocationData(base_loc_id + 36, WPGroup.BOARD_GAME_ISLAND),
-    "Test 38": LocationData(base_loc_id + 37, WPGroup.BOARD_GAME_ISLAND),
-    "Test 39": LocationData(base_loc_id + 38, WPGroup.BOARD_GAME_ISLAND),
-    "Test 40": LocationData(base_loc_id + 39, WPGroup.BOARD_GAME_ISLAND),
-    "Test 41": LocationData(base_loc_id + 40, WPGroup.BOARD_GAME_ISLAND),
-    "Test 42": LocationData(base_loc_id + 41, WPGroup.BOARD_GAME_ISLAND),
-    "Test 43": LocationData(base_loc_id + 42, WPGroup.BOARD_GAME_ISLAND),
-    "Test 44": LocationData(base_loc_id + 43, WPGroup.BOARD_GAME_ISLAND),
-    "Test 45": LocationData(base_loc_id + 44, WPGroup.BOARD_GAME_ISLAND),
-    "Test 46": LocationData(base_loc_id + 45, WPGroup.BOARD_GAME_ISLAND),
-    "Test 47": LocationData(base_loc_id + 46, WPGroup.BOARD_GAME_ISLAND),
-    "Test 48": LocationData(base_loc_id + 47, WPGroup.BOARD_GAME_ISLAND),
-    "Test 49": LocationData(base_loc_id + 48, WPGroup.BOARD_GAME_ISLAND),
-    "Test 50": LocationData(base_loc_id + 49, WPGroup.BOARD_GAME_ISLAND),
-    "Test 51": LocationData(base_loc_id + 50, WPGroup.BOARD_GAME_ISLAND),
-    "Test 52": LocationData(base_loc_id + 51, WPGroup.BOARD_GAME_ISLAND),
-    "Test 53": LocationData(base_loc_id + 52, WPGroup.BOARD_GAME_ISLAND),
-    "Test 54": LocationData(base_loc_id + 53, WPGroup.BOARD_GAME_ISLAND),
-    "Test 55": LocationData(base_loc_id + 54, WPGroup.BOARD_GAME_ISLAND),
-    "Test 56": LocationData(base_loc_id + 55, WPGroup.BOARD_GAME_ISLAND),
-    "Test 57": LocationData(base_loc_id + 56, WPGroup.BOARD_GAME_ISLAND),
-    "Test 58": LocationData(base_loc_id + 57, WPGroup.BOARD_GAME_ISLAND),
-    "Test 59": LocationData(base_loc_id + 58, WPGroup.BOARD_GAME_ISLAND),
-    "Test 60": LocationData(base_loc_id + 59, WPGroup.BOARD_GAME_ISLAND),
+minigame_locations = {
+# 4-Player (41)
+    "Win Derby Dash":          LocationData(base_loc_id + 1,  MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Shifty Gifts":        LocationData(base_loc_id + 2,  MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Chop Chops":          LocationData(base_loc_id + 3,  MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Jumbo Jump":          LocationData(base_loc_id + 4,  MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Popgun Posse":        LocationData(base_loc_id + 5,  MinigameType.FOUR_PLAYER, WPGroup.PRECISION),
+    "Win Hurdle Hover":        LocationData(base_loc_id + 6,  MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Puzzle Pick-Up":      LocationData(base_loc_id + 7,  MinigameType.FOUR_PLAYER, WPGroup.PUZZLE),
+    "Win Lunar Landers":       LocationData(base_loc_id + 8,  MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Zombie Tag":          LocationData(base_loc_id + 9,  MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Flag Fracas":         LocationData(base_loc_id + 10, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Smile Snap":          LocationData(base_loc_id + 11, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Dicey Descent":       LocationData(base_loc_id + 12, MinigameType.FOUR_PLAYER, WPGroup.LUCK),
+    "Win Ram Jam":             LocationData(base_loc_id + 13, MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Feathered Frenzy":    LocationData(base_loc_id + 14, MinigameType.FOUR_PLAYER, WPGroup.PRECISION),
+    "Win Goal Getters":        LocationData(base_loc_id + 15, MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Saucer Snap":         LocationData(base_loc_id + 16, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Quicker Chipper":     LocationData(base_loc_id + 17, MinigameType.FOUR_PLAYER, WPGroup.PRECISION),
+    "Win Follow Your Face":    LocationData(base_loc_id + 18, MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Maze Daze":           LocationData(base_loc_id + 19, MinigameType.FOUR_PLAYER, WPGroup.PUZZLE),
+    "Win Chopper Hoppers":     LocationData(base_loc_id + 20, MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Space Brawl":         LocationData(base_loc_id + 21, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Stop Watchers":       LocationData(base_loc_id + 22, MinigameType.FOUR_PLAYER, WPGroup.PRECISION),
+    "Win Friendly Face-Off":   LocationData(base_loc_id + 23, MinigameType.FOUR_PLAYER, WPGroup.PUZZLE),
+    "Win Barrel Daredevil":    LocationData(base_loc_id + 24, MinigameType.FOUR_PLAYER, WPGroup.PRECISION),
+    "Win Ball Brawl":          LocationData(base_loc_id + 25, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Tropical Punch":      LocationData(base_loc_id + 26, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Strategy Steps":      LocationData(base_loc_id + 27, MinigameType.FOUR_PLAYER, WPGroup.LUCK),
+    "Win Pearl Plunder":       LocationData(base_loc_id + 28, MinigameType.FOUR_PLAYER, WPGroup.LUCK),
+    "Win Hammer Heads":        LocationData(base_loc_id + 29, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Space Race":          LocationData(base_loc_id + 30, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Lofty Leap":          LocationData(base_loc_id + 31, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Face Flip":           LocationData(base_loc_id + 32, MinigameType.FOUR_PLAYER, WPGroup.LUCK),
+    "Win Spotlight Fight":     LocationData(base_loc_id + 33, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Shutterpup":          LocationData(base_loc_id + 34, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Cry Babies":          LocationData(base_loc_id + 35, MinigameType.FOUR_PLAYER, WPGroup.PRECISION),
+    "Win Lucky Launch":        LocationData(base_loc_id + 36, MinigameType.FOUR_PLAYER, WPGroup.LUCK),
+    "Win Back Attack":         LocationData(base_loc_id + 37, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Chin-Up Champ":       LocationData(base_loc_id + 38, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Walk-Off":            LocationData(base_loc_id + 39, MinigameType.FOUR_PLAYER, WPGroup.PRECISION),
+    "Win Balloon Buggies":     LocationData(base_loc_id + 40, MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Risky Railway":       LocationData(base_loc_id + 41, MinigameType.FOUR_PLAYER, WPGroup.LUCK),
+
+    # 1 vs 3 (5)
+    "Win Splash Bash":         LocationData(base_loc_id + 42, MinigameType.ONE_VS_THREE, WPGroup.SKILL),
+    "Win Lumber Whacks":       LocationData(base_loc_id + 43, MinigameType.ONE_VS_THREE, WPGroup.REACTION),
+    "Win Flying Fruit":        LocationData(base_loc_id + 44, MinigameType.ONE_VS_THREE, WPGroup.PRECISION),
+    "Win Poserobics":          LocationData(base_loc_id + 45, MinigameType.ONE_VS_THREE, WPGroup.REACTION),
+    "Win Hide-and-Peek":       LocationData(base_loc_id + 46, MinigameType.ONE_VS_THREE, WPGroup.SKILL),
+
+    # 1 vs 1 (11)
+    "Win Commuter Count":      LocationData(base_loc_id + 47, MinigameType.ONE_VS_ONE, WPGroup.PRECISION),
+    "Win Timber Topple":       LocationData(base_loc_id + 48, MinigameType.ONE_VS_ONE, WPGroup.SKILL),
+    "Win Delivery Duel":       LocationData(base_loc_id + 49, MinigameType.ONE_VS_ONE, WPGroup.PRECISION),
+    "Win Shepherd Scramble":   LocationData(base_loc_id + 50, MinigameType.ONE_VS_ONE, WPGroup.SKILL),
+    "Win Channel Changers":    LocationData(base_loc_id + 51, MinigameType.ONE_VS_ONE, WPGroup.REACTION),
+    "Win Spring Time":         LocationData(base_loc_id + 52, MinigameType.ONE_VS_ONE, WPGroup.SKILL),
+    "Win Pop-Up Bandits":      LocationData(base_loc_id + 53, MinigameType.ONE_VS_ONE, WPGroup.LUCK),
+    "Win Poppin' Pilots":      LocationData(base_loc_id + 54, MinigameType.ONE_VS_ONE, WPGroup.SKILL),
+    "Win Flag Footrace":       LocationData(base_loc_id + 55, MinigameType.ONE_VS_ONE, WPGroup.REACTION),
+    "Win Roll to the Goal":    LocationData(base_loc_id + 56, MinigameType.ONE_VS_ONE, WPGroup.PRECISION),
+    "Win Fruit Focus":         LocationData(base_loc_id + 57, MinigameType.ONE_VS_ONE, WPGroup.PUZZLE),
+
+    # Pair (22)
+    "Win Bumper Crops":        LocationData(base_loc_id + 58, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Robot Factory":       LocationData(base_loc_id + 59, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Paddle Pals":         LocationData(base_loc_id + 60, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Torchlit Terror":     LocationData(base_loc_id + 61, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Basket Bonanza":      LocationData(base_loc_id + 62, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Tippy Traverse":      LocationData(base_loc_id + 63, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Meet and Greet":      LocationData(base_loc_id + 64, MinigameType.PAIR, WPGroup.PUZZLE),
+    "Win Fishin' Buddies":     LocationData(base_loc_id + 65, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Pop Coaster":         LocationData(base_loc_id + 66, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Flycycle Team":       LocationData(base_loc_id + 67, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Sheep Crossing":      LocationData(base_loc_id + 68, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Pump Cart Panic":     LocationData(base_loc_id + 69, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Blastronauts":        LocationData(base_loc_id + 70, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Rodent Rundown":      LocationData(base_loc_id + 71, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Can Poppers":         LocationData(base_loc_id + 72, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Spring Ringers":      LocationData(base_loc_id + 73, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Bobsleigh Highway":   LocationData(base_loc_id + 74, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Skipping Squad":      LocationData(base_loc_id + 75, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Teamwork Temple":     LocationData(base_loc_id + 76, MinigameType.PAIR, WPGroup.PUZZLE),
+    "Win Colour Coordination": LocationData(base_loc_id + 77, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Hidden Charms":       LocationData(base_loc_id + 78, MinigameType.PAIR, WPGroup.LUCK),
+    "Win Banana Blockade":     LocationData(base_loc_id + 79, MinigameType.PAIR, WPGroup.SKILL),
 }
 
 location_table = {
-    **bgi_locations,
+    **minigame_locations,
 }
 
 LOCATION_NAME_TO_ID = {location_name: data.id for location_name, data in location_table.items()}
@@ -126,29 +161,53 @@ for loc_name, loc_data in location_table.items():
 def get_location_names_with_ids(location_names: list[str]) -> dict[str, int | None]:
     return {location_name: location_table[location_name].id for location_name in location_names}
 
-def create_all_locations(world: WiiPartyWorld):
-    create_regular_locations(world)
-    create_events(world)
 
 def create_regular_locations(world: WiiPartyWorld) -> None:
     main_menu = world.get_region("Main Menu")
-    bgi = world.get_region("Board Game Island")
+    four_minigames = world.get_region("4 Player Minigames")
+    one_vs_three_minigames = world.get_region("1 vs 3 Minigames")
+    one_vs_one_minigames = world.get_region("1 vs 1 Minigames")
+    pair_minigames = world.get_region("Pair Minigames")
 
-    bgi_locations_l = get_location_names_with_ids([
-        "Test 1", "Test 2", "Test 3", "Test 4", "Test 5",
-        "Test 6", "Test 7", "Test 8", "Test 9", "Test 10",
-        "Test 11", "Test 12", "Test 13", "Test 14", "Test 15",
-        "Test 16", "Test 17", "Test 18", "Test 19", "Test 20",
-        "Test 21", "Test 22", "Test 23", "Test 24", "Test 25",
-        "Test 26", "Test 27", "Test 28", "Test 29", "Test 30",
-        "Test 31", "Test 32", "Test 33", "Test 34", "Test 35",
-        "Test 36", "Test 37", "Test 38", "Test 39", "Test 40",
-        "Test 41", "Test 42", "Test 43", "Test 44", "Test 45",
-        "Test 46", "Test 47", "Test 48", "Test 49", "Test 50",
-        "Test 51", "Test 52", "Test 53", "Test 54", "Test 55",
-        "Test 56", "Test 57", "Test 58", "Test 59", "Test 60"
-    ])
-    bgi.add_locations(bgi_locations_l)
+    # Map the player size enum to the actual Region object
+    type_to_region = {
+        MinigameType.FOUR_PLAYER: four_minigames,
+        MinigameType.ONE_VS_THREE: one_vs_three_minigames,
+        MinigameType.ONE_VS_ONE: one_vs_one_minigames,
+        MinigameType.PAIR: pair_minigames,
+    }
+
+    # Map the player size enum to the player's toggle option object
+    type_to_option = {
+        MinigameType.FOUR_PLAYER: world.options.four_player_minigames,
+        MinigameType.ONE_VS_THREE: world.options.one_vs_three_minigames,
+        MinigameType.ONE_VS_ONE: world.options.one_vs_one_minigames,
+        MinigameType.PAIR: world.options.pair_minigames,
+    }
+
+    # Map the group enum to the player's toggle option object
+    group_to_option = {
+        WPGroup.SKILL: world.options.skill_minigames,
+        WPGroup.REACTION: world.options.reaction_minigames,
+        WPGroup.LUCK: world.options.luck_minigames,
+        WPGroup.PRECISION: world.options.precision_minigames,
+        WPGroup.PUZZLE: world.options.puzzle_minigames,
+        WPGroup.SKLUCK: world.options.skluck_minigames,
+    }
+
+    # Loop through minigames once, look up their specific data properties
+    for minigame_name, data in minigame_locations.items():
+        # Ensure data and its enums exist
+        if not data or not data.type or not data.group:
+            continue
+
+        player_option = type_to_option.get(data.type)
+        group_option = group_to_option.get(data.group)
+
+        # Check .value to see if the user actually enabled both options in their YAML
+        if player_option and player_option.value and group_option and group_option.value:
+            region = type_to_region[data.type]
+            region.add_locations(get_location_names_with_ids([minigame_name]))
 
 def create_events(world: WiiPartyWorld) -> None:
     main_menu = world.get_region("Main Menu")

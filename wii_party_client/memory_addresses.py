@@ -1,3 +1,7 @@
+class GameAddresses:
+    current_map = 0x803388A3
+    in_results = 0x8033967A
+
 class MenuAddresses:
     button_unlock = 0x80337EA0
 

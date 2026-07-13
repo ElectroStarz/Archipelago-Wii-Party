@@ -13,38 +13,42 @@ class RandomiseBGISpots(DefaultOnToggle):
     display_name = "Randomise BGI spots"
 
 class FourPlayerMinigames(DefaultOnToggle):
-    """Enable 4 Player Minigames"""
+    """Enables 4 Player Minigames"""
     display_name = "4 Player Minigames"
 
 class OnevsThreeMinigames(Toggle):
-    """Enable 1 vs 3 Minigames"""
+    """Enables 1 vs 3 Minigames"""
     display_name = "1 vs 3 Minigames"
     default = False
 
 class OnevsOneMinigames(Toggle):
-    """Enable 1 vs 1 Minigames"""
+    """Enables 1 vs 1 Minigames"""
     display_name = "1 vs 1 Minigames"
     default = False
 
 class PairMinigames(Toggle):
-    """Enable Pair Minigames"""
+    """Enables Pair Minigames"""
     display_name = "Pair Minigames"
     default = False
 
 class SkillMinigames(DefaultOnToggle):
-    """Enable skill based minigames for each player type you've enabled"""
+    """Enables skill based minigames for each player type you've enabled"""
     display_name = "Skill Minigames"
 
 class LuckMinigames(DefaultOnToggle):
-    """Enable luck based minigames for each player type you've enabled"""
+    """Enables luck based minigames for each player type you've enabled"""
     display_name = "Luck Minigames"
 
 class SkluckMinigames(DefaultOnToggle):
     """Enables minigames that aren't just skill, but also luck based for each player type you've enabled"""
     display_name = "Skill/Luck Minigames"
 
+class ReactionMinigames(DefaultOnToggle):
+    """Enables reaction based minigames for each player type you've enabled"""
+    display_name = "Reaction Minigames"
+
 class PrecisionMinigames(DefaultOnToggle):
-    """Enable precision based minigames for each player type you've enabled"""
+    """Enables precision based minigames for each player type you've enabled"""
     display_name = "Precision Minigames"
 
 class PuzzleMinigames(DefaultOnToggle):
@@ -72,6 +76,7 @@ wii_party_option_groups = [
         SkillMinigames,
         LuckMinigames,
         SkluckMinigames,
+        ReactionMinigames,
         PrecisionMinigames,
         PuzzleMinigames,
     ]),
@@ -92,6 +97,7 @@ class WiiPartyOptions(PerGameCommonOptions):
     skill_minigames: SkillMinigames
     luck_minigames: LuckMinigames
     skluck_minigames: SkluckMinigames
+    reaction_minigames: ReactionMinigames
     precision_minigames: PrecisionMinigames
     puzzle_minigames: PuzzleMinigames
     trap_chance: TrapChance
