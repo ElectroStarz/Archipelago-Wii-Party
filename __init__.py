@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, ClassVar
 from BaseClasses import Tutorial
 import pkgutil
 import json
@@ -8,6 +8,7 @@ from .options import wii_party_option_groups, WiiPartyOptions
 from . import items, locations, regions, rules
 from .items import auto_item_groups, ITEM_NAME_TO_ID
 from .locations import auto_location_groups, LOCATION_NAME_TO_ID
+from . import settings as wp_settings
 from worlds.LauncherComponents import Component, Type, components, launch, icon_paths
 
 
@@ -76,6 +77,9 @@ class WiiPartyWorld(World):
 
     item_name_groups = auto_item_groups
     location_name_groups = auto_location_groups
+
+    settings: ClassVar[wp_settings.WPSettings]
+    settings_key = wp_settings.WPSettings.settings_key
 
 
     origin_region_name = "Main Menu"

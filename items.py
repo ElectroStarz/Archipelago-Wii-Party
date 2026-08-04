@@ -212,7 +212,7 @@ for item_name, item_data in item_table.items():
     auto_item_groups[group_name].add(item_name)
 
 
-def get_random_filler_item_name(world: WiiPartyWorld) -> str:
+def get_random_filler_item_name(world: "WiiPartyWorld") -> str:
     traps_list = list(traps.keys())
     filler_list = list(filler.keys())
     if world.random.randint(0, 99) < world.options.trap_chance.value:
@@ -220,7 +220,7 @@ def get_random_filler_item_name(world: WiiPartyWorld) -> str:
     return world.random.choice(filler_list)
 
 
-def create_all_items(world: WiiPartyWorld) -> None:
+def create_all_items(world: "WiiPartyWorld") -> None:
     itempool = []
 
     party_game_mapping = {

@@ -162,25 +162,17 @@ class WPInterface:
             return ConnectionState.DISCONNECTED
 
     def has_player_won(self):
-        map_val = self.dolphin_client.read_byte(GameAddresses.current_map)
+        in_results = self.dolphin_client.read_word(GameAddresses.in_results)
         placement = self.dolphin_client.read_byte(PlayerAddresses.placement)
 
+        if not in_results:
+            return False
 
-        # # 4 player minigames use 0 has the player winning
-        # if map_val in four_player_minigames:
-        #     if placement == 0:
-        #         return True
-        #     else:
-        #         return False
-        #
-        # # Any other minigame type uses 1 as the player winning
-        # elif map_val in other_ids:
-        #     if placement == 1:
-        #         return True
-        #     else:
-        #         return False
-        # else:
-        #     return False
+        # REPLACE WITH LOGIC FOR MINIGAMES OTHER THAN 4 PLAYER
+        if placement == 0:
+            return True
+        else:
+            return False
 
     def get_cpu_skill(self):
         """Returns the CPU Skill"""
@@ -188,7 +180,7 @@ class WPInterface:
 
         return {0: "Beginner", 1: "Standard", 2: "Advanced", 3: "Expert", 4: "Master"}[value]
 
-    def get_minigame(self):
+    async def get_minigame(self):
         current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
         return map_matches.get(current_map)
 

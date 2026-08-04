@@ -3,13 +3,14 @@ import logging
 import random
 import traceback
 from collections import deque
-from random import randint, uniform
 from typing import Dict, Set, Optional, Any
+import subprocess
 
 import Utils
 from CommonClient import ClientCommandProcessor, CommonContext
 from MultiServer import mark_raw
 from NetUtils import ClientStatus, JSONMessagePart
+from settings import get_settings
 from .WPInterface import WPInterface, ConnectionState
 from ..items import item_table
 from ..locations import LOCATION_NAME_TO_ID
@@ -26,6 +27,12 @@ logger = logging.getLogger("Client")
 status_messages = {
     ConnectionState.DISCONNECTED: "Unable to connect to the Dolphin instance, attempting to reconnect...",
     ConnectionState.CONNECTED: "Connected to Dolphin!",
+    ConnectionState.BGI: "In Board Game Island",
+    ConnectionState.GLOBE_TROT: "In Globe Trot",
+    ConnectionState.MII_OF_A_KIND: "In Mii of a Kind/Swap Mii",
+    ConnectionState.SPIN_OFF: "In Spin-Off",
+    ConnectionState.BINGO: "In Bingo",
+    ConnectionState.MINIGAME: "In a Minigame",
 }
 
 class WPCommandProcessor(ClientCommandProcessor):
@@ -136,6 +143,7 @@ class WPContext(CommonContext):
     connection_state = ConnectionState.DISCONNECTED
     slot_data: dict[str, Any] = {}
     last_error_message: Optional[str] = None
+    auto_start: bool = get_settings()["wp_settings"]["auto_start"]
 
     def __init__(self, server_address: str, password: str):
         super().__init__(server_address, password)
@@ -146,7 +154,6 @@ class WPContext(CommonContext):
 
         # Lists for items
         self.party_games = []
-        self.free_play_games = []
         self.minigames = []
 
         self.filler_to_give = deque()
@@ -224,6 +231,32 @@ class WPContext(CommonContext):
             logger.warning("Timed out loading handled consumables from server storage")
             self._consumables_load_event.set()
 
+    async def mark_consumable_handled(self, item_index: Optional[int]) -> None:
+        if item_index is None:
+            return
+
+        self.queued_consumable_indices.discard(item_index)
+        self.handled_consumable_indices.add(item_index)
+        # Save after the effect is applied so a disconnect mid-queue doesn't eat the item.
+        await self.save_handled_consumables()
+        self.debug_log(f"Saved handled consumable index {item_index}")
+
+    async def save_handled_consumables(self) -> None:
+        key = self.consumable_storage_key
+        if key is None:
+            return
+        await self.send_msgs([{
+            "cmd": "Set",
+            "key": key,
+            "default": [],
+            "want_reply": True,
+            "operations": [{
+                "operation": "replace",
+                "value": sorted(self.handled_consumable_indices)
+            }]
+        }])
+        self.debug_log(f"Saving handled consumables: {sorted(self.handled_consumable_indices)}")
+
     async def _handle_received_items_consumables(self, args: dict) -> None:
         # Wait for storage before queuing — otherwise reconnects re-fire already-handled items.
         await self.load_handled_consumables()
@@ -266,6 +299,27 @@ class WPContext(CommonContext):
                 self.debug_log(f"Trap queue size is now {len(self.traps_to_give)}")
 
         await self.handle_received_items()
+
+    def reset_game_session_state(self, game_active: bool = False) -> None:
+        """Reset runtime-only state when the game process/title exits or restarts."""
+        pass
+
+    def reset_local_item_state(self, clear_received: bool = False, clear_consumed: bool = False) -> None:
+        if clear_received:
+            self.items_received.clear()
+        pass
+
+        if clear_consumed:
+            self.filler_to_give.clear()
+            self.traps_to_give.clear()
+            self.queued_consumable_indices.clear()
+            self.handled_consumable_indices.clear()
+            self._consumables_load_event.clear()
+
+
+    def reset_location_state(self) -> None:
+        self.locations_checked.clear()
+        self.checked_locations.clear()
 
     def on_package(self, cmd: str, args: dict):
         if cmd == "Connected":
@@ -344,7 +398,7 @@ class WPContext(CommonContext):
 
     def make_gui(self):
         ui = super().make_gui()
-        ui.base_title = f"Archipelago Wii Party Client (Version {CLIENT_VERSION})"
+        ui.base_title = f"Archipelago Wii Party Client (Version {CLIENT_VERSION}) | AP Version"
         return ui
 
     # --- Log types ---
@@ -465,18 +519,18 @@ class WPContext(CommonContext):
 
         self.game_interface.dolphin_client.write_word(MenuAddresses.button_unlock, unlock_value)
 
-    async def handle_minigame_win(self):
-        if not self.game_interface.has_player_won():
-            return
 
-        minigame = self.game_interface.get_minigame()
+    # === Misc Stuff idk where to put ===
 
-        await self.check_location(f"Win {minigame}")
 
     async def dolphin_sync_task(self) -> None:
         """Main Dolphin loop. Add Wii Party memory reads/writes here as addresses are mapped."""
         while not self.exit_event.is_set():
             try:
+                if self.game_interface.dolphin_client.check_for_dolphin() == 0 and self.auto_start:
+                    self.run_wii_party()
+                    await asyncio.sleep(2)
+
                 if not self.game_interface.dolphin_client.is_hooked():
                     await self.game_interface.dolphin_client.attempt_to_hook()
 
@@ -497,18 +551,42 @@ class WPContext(CommonContext):
 
                 self.last_error_message = None
 
+                self.update_connection_status()
+
                 await self.handle_received_items()
+
+                # Needs to be happening all the time
+                self.game_interface.dolphin_client.write_word(0x8042fd444, 0x800013B0)
+                self.game_interface.dolphin_client.write_word(0x8042fd440, 0x800014B0)
+
+                await asyncio.sleep(0.1)
 
 
                 # TODO: Route Wii Party-specific item and location handling here
                 await asyncio.sleep(1)
 
-            except Exception:
-                logger.error(f"Sync Task Error:\n{traceback.format_exc()}")
+
+            except Exception as e:
+                if "Dolphin" in str(e):
+                    logger.error(f"Dolphin Connection Error: {e}")
+                    self.update_connection_status()
+
+                else:
+                    logger.error(f"Sync Task Error:\n{traceback.format_exc()}")
                 await asyncio.sleep(3)
+
+    @staticmethod
+    def run_wii_party():
+        dolphin_exe_path: str = get_settings()["wp_settings"]["dolphin_exe_path"]
+        path_to_json: str = "NONE - PLEASE REPLACE LATER"
+
+        subprocess.run([f"{dolphin_exe_path} --exec={path_to_json} -b --config=Dolphin.Core.EnableCheats=False "
+                        f"--config=Achievements.Achievements.Enabled=False"])
+
 
 
     # === Location Handling ===
+
 
     async def check_location(self, location_name: str):
         """Checks if you've already got the location, if not, notifies AP about getting the location"""
@@ -526,3 +604,34 @@ class WPContext(CommonContext):
         await self.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}])
         self.locations_checked.add(location_id)
         self.debug_log(f"Checked location: name={location_name}, id={location_id}")
+
+    async def handle_minigame_checks(self):
+
+        if not self.game_interface.has_player_won():
+            return
+
+        minigame = self.game_interface.get_minigame()
+
+        await self.check_location(f"Win {minigame}")
+
+
+    # === Where to handle what ===
+
+
+    async def handle_in_bgi(self):
+        pass
+
+    async def handle_in_globe_trot(self):
+        pass
+
+    async def handle_in_mii(self):
+        pass
+
+    async def handle_in_spin_off(self):
+        pass
+
+    async def handle_in_bingo(self):
+        pass
+
+    async def handle_in_minigame(self):
+        await self.handle_minigame_checks()
