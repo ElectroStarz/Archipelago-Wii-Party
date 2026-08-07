@@ -1,21 +1,19 @@
 import asyncio
 import multiprocessing
-
 import Utils
-from CommonClient import get_base_parser, gui_enabled, handle_url_arg, server_loop
+
+from CommonClient import get_base_parser, handle_url_arg, gui_enabled, server_loop
 from .WPContext import WPContext, logger
 
 
 def launch_wii_party_client(*args):
-    Utils.init_logging("Wii Party Client")
+    Utils.init_logging("Mario Sports Mix Client")
 
     async def main(main_args):
         multiprocessing.freeze_support()
         logger.info("main")
-        main_parser = get_base_parser()
-        parser_args = main_parser.parse_args()
 
-        ctx = WPContext(parser_args.connect, parser_args.password)
+        ctx = WPContext(main_args.connect, main_args.password)
         ctx.auth = main_args.name
 
         logger.info("Connecting to server...")
@@ -36,14 +34,14 @@ def launch_wii_party_client(*args):
             await ctx.dolphin_sync_task
 
     import colorama
-
-    parser = get_base_parser(description="Wii Party Archipelago Client.")
-    parser.add_argument("--name", default=None, help="Slot Name to connect as.")
+    parser = get_base_parser(description="Wii Party Archipelago Client")
+    parser.add_argument('--name', default=None, help="Slot Name to connect as.")
     parser.add_argument("url", nargs="?", help="Archipelago connection url")
 
     launch_args = handle_url_arg(parser.parse_args(args))
 
     colorama.just_fix_windows_console()
+
     asyncio.run(main(launch_args))
     colorama.deinit()
 
