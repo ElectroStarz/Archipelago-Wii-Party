@@ -12,11 +12,8 @@ from . import settings as wp_settings
 from worlds.LauncherComponents import Component, Type, components, launch, icon_paths
 
 
-
 def run_client(*args: str) -> None:
     from .wii_party_client.main_client import launch_wii_party_client as launch_wp_client
-
-
     launch(launch_wp_client, name="Wii Party Client", args=args)
 
 components.append(
@@ -40,7 +37,6 @@ if data is not None:
     WORLD_VERSION = file["world_version"]
 else:
     raise FileNotFoundError("Could not find archipelago.json in the APWorld!")
-
 
 
 class WiiPartyWebWorld(WebWorld):
@@ -94,7 +90,7 @@ class WiiPartyWorld(World):
         #
         # visualize_regions(
         #     self.get_region("Main Menu"),
-        #     "mario_sports_mix_regions_status.puml",
+        #     "wii_party_regions_status.puml",
         #     show_entrance_names=True,
         #     regions_to_highlight=set(state.reachable_regions[self.player])
         # )
@@ -115,6 +111,7 @@ class WiiPartyWorld(World):
     def fill_slot_data(self) -> Mapping[str, Any]:
         slot_data = {
         "version": WORLD_VERSION,
+        "game_region": self.options.game_region.value,
         }
 
         return slot_data

@@ -1,8 +1,9 @@
 from enum import Enum
 from .memory_addresses import *
+from . import WPContext as WPctx
 from .dolphin_connection import DolphinClient, DolphinException
 
-map_matches = {
+rel_to_name = {
     1: "boot",
     106: "inst",
     2: "loading",
@@ -110,6 +111,124 @@ map_matches = {
     104: "openmess",
     105: "ranking",
 }
+"""A dictionary converting the rel ID to the rel name"""
+
+minigame_data = {
+    # 1 vs 1
+    0x64: ("1 vs 1", "Commuter Count"),
+    0x65: ("1 vs 1", "Timber Topple"),
+    0x66: ("1 vs 1", "Delivery Duel"),
+    0x68: ("1 vs 1", "Roll to the Goal"),
+    0x6a: ("1 vs 1", "Channel Changers"),
+    0x6b: ("1 vs 1", "Spring Time"),
+    0x6c: ("1 vs 1", "Shepherd Scramble"),
+    0x6d: ("1 vs 1", "Poppin' Pilots"),
+    0x6e: ("1 vs 1", "Flag Footrace"),
+    0x6f: ("1 vs 1", "Pop-Up Bandits"),
+    0x70: ("1 vs 1", "Fruit Focus"),
+
+    # Pair
+    0xc8: ("Pair", "Flycycle Team"),
+    0xc9: ("Pair", "Fishin' Buddies"),
+    0xca: ("Pair", "Bumper Crops"),
+    0xcb: ("Pair", "Robot Factory"),
+    0xcc: ("Pair", "Torchlit Terror"),
+    0xcd: ("Pair", "Basket Bonanza"),
+    0xce: ("Pair", "Meet and Greet"),
+    0xd0: ("Pair", "Paddle Pals"),
+    0xd1: ("Pair", "Pop Coaster"),
+    0xd2: ("Pair", "Tippy Traverse"),
+    0xd3: ("Pair", "Pump Cart Panic"),
+    0xd4: ("Pair", "Sheep Crossing"),
+    0xd5: ("Pair", "Banana Blockade"),
+    0xd6: ("Pair", "Spring Ringers"),
+    0xd7: ("Pair", "Can Poppers"),
+    0xd8: ("Pair", "Hidden Charms"),
+    0xda: ("Pair", "Rodent Rundown"),
+    0xdb: ("Pair", "Skipping Squad"),
+    0xdd: ("Pair", "Bobsleigh Highway"),
+    0xde: ("Pair", "Colour Coordination"),
+    0xdf: ("Pair", "Teamwork Temple"),
+    0xe0: ("Pair", "Blastronauts"),
+
+    # 1 vs 3
+    0x12c: ("1 vs 3", "Flying Fruit"),
+    0x12d: ("1 vs 3", "Lumber Whacks"),
+    0x12e: ("1 vs 3", "Splash Bash"),
+    0x12f: ("1 vs 3", "Poserobics"),
+    0x130: ("1 vs 3", "Hide-and-Peek"),
+
+    # 4 Player
+    0x190: ("4 Player", "Derby Dash"),
+    0x191: ("4 Player", "Smiley Snap"),
+    0x192: ("4 Player", "Chop Chops"),
+    0x193: ("4 Player", "Walk-Off"),
+    0x194: ("4 Player", "Shifty Gifts"),
+    0x195: ("4 Player", "Hurdle Hover"),
+    0x196: ("4 Player", "Jumbo Jump"),
+    0x197: ("4 Player", "Lunar Landers"),
+    0x198: ("4 Player", "Popgun Posse"),
+    0x19a: ("4 Player", "Friendly Face-Off"),
+    0x19b: ("4 Player", "Flag Fracas"),
+    0x19c: ("4 Player", "Shutterpup"),
+    0x19d: ("4 Player", "Lucky Launch"),
+    0x19e: ("4 Player", "Saucer Snap"),
+    0x19f: ("4 Player", "Maze Daze"),
+    0x1a0: ("4 Player", "Quicker Chipper"),
+    0x1a2: ("4 Player", "Barrel Daredevil"),
+    0x1a3: ("4 Player", "Face Flip"),
+    0x1a4: ("4 Player", "Goal Getters"),
+    0x1a5: ("4 Player", "Stop Watchers"),
+    0x1a6: ("4 Player", "Chopper Hoppers"),
+    0x1a7: ("4 Player", "Puzzle Pick-Up"),
+    0x1a8: ("4 Player", "Feathered Frenzy"),
+    0x1aa: ("4 Player", "Follow Your Face"),
+    0x1ab: ("4 Player", "Strategy Steps"),
+    0x1ac: ("4 Player", "Tropical Punch"),
+    0x1ae: ("4 Player", "Zombie Tag"),
+    0x1af: ("4 Player", "Pearl Plunder"),
+    0x1b0: ("4 Player", "Hammer Heads"),
+    0x1b1: ("4 Player", "Ball Brawl"),
+    0x1b2: ("4 Player", "Lofty Leap"),
+    0x1b4: ("4 Player", "Space Brawl"),
+    0x1b5: ("4 Player", "Dicey Descent"),
+    0x1b6: ("4 Player", "Space Race"),
+    0x1b7: ("4 Player", "Cry Babies"),
+    0x1b8: ("4 Player", "Ram Jam"),
+    0x1b9: ("4 Player", "Spotlight Fight"),
+    0x1ba: ("4 Player", "Chin-Up Champ"),
+    0x1bb: ("4 Player", "Risky Railway"),
+    0x1bd: ("4 Player", "Balloon Buggies"),
+    0x1be: ("4 Player", "Back Attack"),
+
+    # Challenge
+    0x1f5: ("Challenge", "Marching Orders"),
+    0x1f6: ("Challenge", "Garden Gridlock"),
+    0x1f7: ("Challenge", "Shifty Gifts"),
+    0x1f8: ("Challenge", "Tippy Traverse"),
+    0x1f9: ("Challenge", "Banana Blockade"),
+    0x1fa: ("Challenge", "Clover Hunter"),
+    0x1fb: ("Challenge", "About Face (Solo)"),
+    0x1fc: ("Challenge", "About Face (4 Player)"),
+    0x1fd: ("Challenge", "About Face (1 vs 1)"),
+}
+"""A dictionary of the minigame type and name from the minigame ID"""
+
+PAL_TO_NTSCU = {
+    "Lunar Landers": "Moon Landing",
+    "Hurdle Hover": "Flap Hurdles",
+    "Ball Brawl": "Crash Balls",
+    "Space Race": "Cosmic Capers",
+    "Lofty Leap": "Rope Sling",
+    "Risky Railway": "Risky Railroad",
+    "Shepherd Scramble": "Jangle Wranglers",
+    "Torchlit Terror": "Flashlight Frights",
+    "Hidden Charms": "Clover Hunt",
+    "Skipping Squad": "Jump Rope Jam",
+    "Bobsleigh Highway": "Bobsled Highway",
+    "Colour Coordination": "Color Coordination",
+}
+"""Converts PAL names to the NTSC-U equivalent"""
 
 class ConnectionState(Enum):
     DISCONNECTED = 0
@@ -121,9 +240,13 @@ class ConnectionState(Enum):
     SPIN_OFF = 6
     BINGO = 7
     MINIGAME = 8
+    MINI_RESULTS = 9
+    PG_RESULTS = 10
 
 
 class WPInterface:
+    """Interfaces directly with Wii Party, returning information about the status of the game"""
+
     dolphin_client: DolphinClient
 
     def __init__(self, logger):
@@ -156,98 +279,189 @@ class WPInterface:
             if self.in_minigame():
                 return ConnectionState.MINIGAME
 
+            if self.in_results() == 1:
+                return ConnectionState.MINI_RESULTS
+
+            if self.in_results() == 2:
+                return ConnectionState.PG_RESULTS
+
             return ConnectionState.CONNECTED
 
         except (DolphinException, RuntimeError):
             return ConnectionState.DISCONNECTED
 
-    def has_player_won(self):
-        in_results = self.dolphin_client.read_word(GameAddresses.in_results)
-        placement = self.dolphin_client.read_byte(PlayerAddresses.placement)
+    def get_active_mode(self) -> str:
+        """Returns the active mode, regardless whether the rel is loaded"""
+
+        mode = self.dolphin_client.read_word(GameAddresses.game_mode)
+
+        mode_to_string = {
+            0x00: "Board Game Island",
+            0x01: "Spin-Off",
+            0x03: "Globe Trot",
+            0x04: "Mii of a Kind",
+            0x05: "Balance Boat - Double Up",
+            0x06: "Balance Boat - Time Attack",
+            0x07: "Friend Connection",
+            0x08: "Match-Up",
+            0x09: "Buddy Quiz",
+            0x0b: "Time Bomb",
+            0x0c: "Word Bomb",
+            0x0d: "Animal Tracker",
+            0x0f: "Hide 'n' Hunt",
+            0x10: "Bingo",
+            0x11: "Rule Reversal",
+            0x12: "Free Play",
+            0x14: "Battle",
+            0x16: "Solo",
+            0x17: "Challenge",
+        }
+
+        return mode_to_string[mode]
+
+    def mini_player_won(self) -> bool | None:
+        """Evaluates if the player has won a minigame, returns None if the results haven't been decided"""
+
+        in_results = self.dolphin_client.read_bytes(GameAddresses.mini_in_results, 2)
+        current_rel = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        placement = self.dolphin_client.read_byte(PlayerAddresses.minigame_placement)
+
+        if not in_results and current_rel != 106:
+            # Results not decided
+            return None
+
+        type, _ = self.get_current_minigame()
+
+        if type == "4 Player":
+            return placement == 0
+        else:
+            return placement == 1
+
+    def pg_player_won(self) -> bool | None:
+        """Evaluates if the player has won a party game, returns None if the results haven't been decided"""
+
+        in_results = self.dolphin_client.read_bytes(GameAddresses.pg_in_results, 2)
+
+        # NEED TO FIND PG PLACEMENT
+        placement = self.dolphin_client.read_byte(PlayerAddresses.minigame_placement)
 
         if not in_results:
-            return False
+            # Results not decided
+            return None
 
-        # REPLACE WITH LOGIC FOR MINIGAMES OTHER THAN 4 PLAYER
-        if placement == 0:
-            return True
-        else:
-            return False
+        return placement == 0
 
-    def get_cpu_skill(self):
-        """Returns the CPU Skill"""
+    def get_current_minigame(self) -> tuple[str, str]:
+        """Returns the Minigame Type, Minigame Name"""
+
+        type, name = minigame_data[self.dolphin_client.read_word(GameAddresses.minigame_id)]
+
+        if WPctx.YAML_GAME_VERSION == 2: # 2 = NTSC-U
+            name = PAL_TO_NTSCU[name]
+
+        return type, name
+
+    def get_cpu_skill(self) -> tuple[int, str]:
+        """Returns the CPU Skill int and string"""
+
         value = self.dolphin_client.read_byte(CPUAddresses.skill)
 
-        return {0: "Beginner", 1: "Standard", 2: "Advanced", 3: "Expert", 4: "Master"}[value]
+        return value, {0: "Beginner", 1: "Standard", 2: "Advanced", 3: "Expert", 4: "Master"}[value]
 
-    async def get_minigame(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        return map_matches.get(current_map)
 
-    def in_minigame(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        string = map_matches.get(current_map)
-        non_minigames = ["boot", "inst", "loading", "menu","Board Game Island", "Spin-Off", "Globe Trot",
+    def in_minigame(self) -> bool:
+        """Checks if the current rel loaded is a minigame"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+        non_minigames = ["boot", "loading", "menu", "Board Game Island", "Spin-Off", "Globe Trot",
         "Mii of a Kind", "Balance Boat", "Balance Boat Time Attack", "Friend Connection", "Match-Up", "Buddy Quiz",
         "Time Bomb", "Word Bomb", "Animal Tracker", "Quick Draw", "Hide 'n' Hunt", "Bingo", "Rule Reversal", "Battle",
         "Solo", "openmess", "ranking"]
 
-        if string not in non_minigames:
-            return True
+        return string not in non_minigames
+
+
+    def is_in_menu(self) -> bool:
+        """Checks the current rel loaded to see if we're in the menu"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+
+        return string == "menu"
+
+    def is_bgi(self) -> bool:
+        """Checks the current rel loaded to see if BGI is loaded"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+
+        return string == "Board Game Island"
+
+    def is_globe_trot(self) -> bool:
+        """Checks the current rel loaded to see if Globe Trot is loaded"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+
+        return string == "Globe Trot"
+
+    def is_mii_of_a_kind(self) -> bool:
+        """Checks the current rel loaded to see if Mii of a Kind (Swap Meet) is loaded"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+
+        return string == "Mii of a Kind"
+
+    def is_spin_off(self) -> bool:
+        """Checks the current rel loaded to see if Spin-Off is loaded"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+
+        return string == "Spin-Off"
+
+    def is_bingo(self) -> bool:
+        """Checks the current rel loaded to see if Bingo is loaded"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+
+        return string == "Bingo"
+
+    def is_loading(self) -> bool:
+        """Checks the current rel loaded to see if we're in some sort of loading screen"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+
+        return string in ["loading", "boot"]
+
+    def is_instructions(self) -> bool:
+        """Checks the current rel loaded to see if we're in the instructions (WITHOUT RESULTS)"""
+
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        string = rel_to_name.get(current_map)
+        mini_in_results = self.dolphin_client.read_bytes(GameAddresses.mini_in_results, 2)
+        pg_in_results = self.dolphin_client.read_bytes(GameAddresses.pg_in_results, 2)
+
+        return string == "inst" and not mini_in_results and not pg_in_results
+
+    def in_results(self) -> int:
+        """Checks if we're in the results screen for either Party Games or Minigames
+        Returns 1 if we're in the minigame results, 2 if we're in the party game results, 0 if none"""
+
+        mini_in_results = self.dolphin_client.read_bytes(GameAddresses.mini_in_results, 2)
+        pg_in_results = self.dolphin_client.read_bytes(GameAddresses.pg_in_results, 2)
+        current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
+        rel = rel_to_name.get(current_map)
+
+        party_games = ["Board Game Island", "Globe Trot", "Mii of a Kind", "Spin-Off", "Bingo"]
+
+        if mini_in_results and rel == "inst":
+            return 1
+        elif pg_in_results and self.get_active_mode() in party_games:
+            return 2
         else:
-            return False
-
-    def is_in_menu(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        string = map_matches.get(current_map)
-        menu_strings = ["boot", "menu", "inst", "loading"]
-
-        if string in menu_strings:
-            return True
-        else:
-            return False
-
-    def is_bgi(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        string = map_matches.get(current_map)
-
-        if string == "Board Game Island":
-            return True
-        else:
-            return False
-
-    def is_globe_trot(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        string = map_matches.get(current_map)
-
-        if string == "Globe Trot":
-            return True
-        else:
-            return False
-
-    def is_mii_of_a_kind(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        string = map_matches.get(current_map)
-
-        if string == "Mii of a Kind":
-            return True
-        else:
-            return False
-
-    def is_spin_off(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        string = map_matches.get(current_map)
-
-        if string == "Spin-Off":
-            return True
-        else:
-            return False
-
-    def is_bingo(self):
-        current_map = self.dolphin_client.read_byte(GameAddresses.current_map)
-        string = map_matches.get(current_map)
-
-        if string == "Bingo":
-            return True
-        else:
-            return False
+            return 0

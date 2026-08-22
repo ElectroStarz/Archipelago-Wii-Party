@@ -7,14 +7,25 @@ from typing import Dict, Set, Optional, Any
 import subprocess
 
 import Utils
-from CommonClient import ClientCommandProcessor, CommonContext
 from MultiServer import mark_raw
 from NetUtils import ClientStatus, JSONMessagePart
 from settings import get_settings
 from .WPInterface import WPInterface, ConnectionState
+from . import dolphin_connection as dc
 from ..items import item_table
 from ..locations import LOCATION_NAME_TO_ID
 from .memory_addresses import *
+
+tracker_loaded = False
+try:
+    from worlds.tracker.TrackerClient import TrackerGameContext as SuperContext, \
+                                             TrackerCommandProcessor as SuperCommandProcessor
+    tracker_loaded = True
+except ModuleNotFoundError:
+    from CommonClient import CommonContext as SuperContext, ClientCommandProcessor as SuperCommandProcessor
+
+
+YAML_GAME_VERSION = None
 
 
 id_to_name = {data.code: name for name, data in item_table.items()}
@@ -35,7 +46,7 @@ status_messages = {
     ConnectionState.MINIGAME: "In a Minigame",
 }
 
-class WPCommandProcessor(ClientCommandProcessor):
+class WPCommandProcessor(SuperCommandProcessor):
     ctx: "WPContext"
 
     def __init__(self, ctx: "WPContext"):
@@ -82,13 +93,11 @@ class WPCommandProcessor(ClientCommandProcessor):
         :param addr_type: Any from Byte, Halfword, Word, Float or String.
         :param pointers: Optional and should look like 0x1F4, 0x8,"""
 
-        # ADDED , 16 HERE: This tells Python to parse the string as hexadecimal
         try:
             numeric_address = int(address, 16)
         except ValueError:
             return f"Error: '{address}' is not a valid hexadecimal address."
 
-        # Use the newly converted numeric_address instead of the raw string
         if pointers:
             new_pointers = []
             for p in pointers:
@@ -131,8 +140,12 @@ class WPCommandProcessor(ClientCommandProcessor):
         logger.info(f"[Memory Read] {addr_type} at {hex(final_address)}. Result: {result}")
         return result
 
+class RegionMismatchError(Exception):
+    pass
 
-class WPContext(CommonContext):
+# noinspection PyDeprecation
+# noinspection PyAttributeOutsideInit
+class WPContext(SuperContext):
     tags = {"AP"}
     game = "Wii Party"
     command_processor = WPCommandProcessor
@@ -316,28 +329,22 @@ class WPContext(CommonContext):
             self.handled_consumable_indices.clear()
             self._consumables_load_event.clear()
 
-
     def reset_location_state(self) -> None:
         self.locations_checked.clear()
         self.checked_locations.clear()
 
     def on_package(self, cmd: str, args: dict):
-        if cmd == "Connected":
-            new_team = args["team"]
-            new_slot = args["slot"]
-            ap_locations_checked = args["checked_locations"]
-            self.locations_checked.update(ap_locations_checked)
-            if self.team is not None and self.slot is not None and (self.team, self.slot) != (new_team, new_slot):
-                # Clear before CommonContext handles Connected so it cannot send stale local checks for the new slot.
-                pass
-
         super().on_package(cmd, args)
         if cmd == "Connected":
+            ap_locations_checked = args["checked_locations"]
+            self.locations_checked.update(ap_locations_checked)
+
             self.slot_data = args.get("slot_data", {})
 
+            global YAML_GAME_VERSION
+            YAML_GAME_VERSION = self.slot_data.get("game_region", None)
 
-
-            # Slot is known now — load/create the per-slot consumable save before items arrive.
+            # Slot is known now - load/create the per-slot consumable save before items arrive.
             asyncio.create_task(self.load_handled_consumables(initialise=True))
             if self.locations_checked:
                 asyncio.create_task(
@@ -366,7 +373,7 @@ class WPContext(CommonContext):
         elif cmd == "RoomInfo":
             new_seed = args.get("seed_name", "unknown")
             if self.seed != new_seed:
-                # New seed — don't carry consumable or location state from the previous room.
+                # New seed - don't carry consumable or location state from the previous room.
                 pass
 
             self.seed = new_seed
@@ -452,11 +459,6 @@ class WPContext(CommonContext):
             else:
                 logger.info(message)
             self._rate_log_states[key] = now
-
-    @staticmethod
-    async def delay_log(message: str, delay: int):
-        logger.info(message)
-        await asyncio.sleep(delay)
 
     def log_colour(self, text: str, colour: str):
         if self.ui is not None:
@@ -553,6 +555,23 @@ class WPContext(CommonContext):
 
                 self.update_connection_status()
 
+                if self.connection_state == ConnectionState.BGI:
+                    await self.handle_in_bgi()
+                elif self.connection_state == ConnectionState.GLOBE_TROT:
+                    await self.handle_in_globe_trot()
+                elif self.connection_state == ConnectionState.MII_OF_A_KIND:
+                    await self.handle_in_mii()
+                elif self.connection_state == ConnectionState.SPIN_OFF:
+                    await self.handle_in_spin_off()
+                elif self.connection_state == ConnectionState.BINGO:
+                    await self.handle_in_bingo()
+                elif self.connection_state == ConnectionState.MINIGAME:
+                    await self.handle_in_minigame()
+                elif self.connection_state == ConnectionState.MINI_RESULTS:
+                    await self.handle_in_mini_results()
+                elif self.connection_state == ConnectionState.PG_RESULTS:
+                    await self.handle_in_pg_results()
+
                 await self.handle_received_items()
 
                 # Needs to be happening all the time
@@ -560,10 +579,6 @@ class WPContext(CommonContext):
                 self.game_interface.dolphin_client.write_word(0x8042fd440, 0x800014B0)
 
                 await asyncio.sleep(0.1)
-
-
-                # TODO: Route Wii Party-specific item and location handling here
-                await asyncio.sleep(1)
 
 
             except Exception as e:
@@ -577,6 +592,8 @@ class WPContext(CommonContext):
 
     @staticmethod
     def run_wii_party():
+        """Automatically runs Wii Party with our patches though a command"""
+
         dolphin_exe_path: str = get_settings()["wp_settings"]["dolphin_exe_path"]
         path_to_json: str = "NONE - PLEASE REPLACE LATER"
 
@@ -598,7 +615,7 @@ class WPContext(CommonContext):
             return
 
         if location_id in self.locations_checked:
-            self.debug_log(f"Location in locations checked!")
+            self.debug_log(f"Location: {location_name} in locations checked!")
             return
 
         await self.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}])
@@ -606,14 +623,25 @@ class WPContext(CommonContext):
         self.debug_log(f"Checked location: name={location_name}, id={location_id}")
 
     async def handle_minigame_checks(self):
+        """Handles sending minigame checks"""
 
-        if not self.game_interface.has_player_won():
+        if not self.game_interface.mini_player_won():
             return
 
-        minigame = self.game_interface.get_minigame()
+        _, minigame_name = self.game_interface.get_current_minigame()
 
-        await self.check_location(f"Win {minigame}")
+        await self.check_location(f"Win {minigame_name}")
 
+
+    async def handle_win_pg_checks(self):
+        """Handles sending the win Party Game checks"""
+
+        if not self.game_interface.pg_player_won():
+            return
+
+        mode = self.game_interface.get_active_mode()
+
+        await self.check_location(f"Win {mode}")
 
     # === Where to handle what ===
 
@@ -634,4 +662,10 @@ class WPContext(CommonContext):
         pass
 
     async def handle_in_minigame(self):
+        pass
+
+    async def handle_in_mini_results(self):
         await self.handle_minigame_checks()
+
+    async def handle_in_pg_results(self):
+        await self.handle_win_pg_checks()
