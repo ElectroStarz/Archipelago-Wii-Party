@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, NamedTuple
+import re
 
-from BaseClasses import Location
+from BaseClasses import Location, Region
 from . import items
 from .options import *
+from .WPUtils import *
 
 if TYPE_CHECKING:
     from . import WiiPartyWorld
@@ -117,35 +119,35 @@ minigame_locations = {
     "Win Fruit Focus":              LocData(base_id + 57, MinigameType.ONE_VS_ONE, WPGroup.PUZZLE),
 
     # Pair (22)
-    "Win Bumper Crops":             LocData(base_id + 58, MinigameType.PAIR, WPGroup.PRECISION),
-    "Win Robot Factory":            LocData(base_id + 59, MinigameType.PAIR, WPGroup.REACTION),
-    "Win Paddle Pals":              LocData(base_id + 60, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Torchlit Terror":          LocData(base_id + 61, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Basket Bonanza":           LocData(base_id + 62, MinigameType.PAIR, WPGroup.PRECISION),
-    "Win Tippy Traverse":           LocData(base_id + 63, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Meet and Greet":           LocData(base_id + 64, MinigameType.PAIR, WPGroup.PUZZLE),
-    "Win Fishin' Buddies":          LocData(base_id + 65, MinigameType.PAIR, WPGroup.PRECISION),
-    "Win Pop Coaster":              LocData(base_id + 66, MinigameType.PAIR, WPGroup.PRECISION),
-    "Win Flycycle Team":            LocData(base_id + 67, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Sheep Crossing":           LocData(base_id + 68, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Pump Cart Panic":          LocData(base_id + 69, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Blastronauts":             LocData(base_id + 70, MinigameType.PAIR, WPGroup.PRECISION),
-    "Win Rodent Rundown":           LocData(base_id + 71, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Can Poppers":              LocData(base_id + 72, MinigameType.PAIR, WPGroup.PRECISION),
-    "Win Spring Ringers":           LocData(base_id + 73, MinigameType.PAIR, WPGroup.PRECISION),
-    "Win Bobsleigh Highway":        LocData(base_id + 74, MinigameType.PAIR, WPGroup.SKILL),
-    "Win Skipping Squad":           LocData(base_id + 75, MinigameType.PAIR, WPGroup.REACTION),
-    "Win Teamwork Temple":          LocData(base_id + 76, MinigameType.PAIR, WPGroup.PUZZLE),
-    "Win Colour Coordination":      LocData(base_id + 77, MinigameType.PAIR, WPGroup.REACTION),
-    "Win Hidden Charms":            LocData(base_id + 78, MinigameType.PAIR, WPGroup.LUCK),
-    "Win Banana Blockade":          LocData(base_id + 79, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Bumper Crops":              LocData(base_id + 58, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Robot Factory":             LocData(base_id + 59, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Paddle Pals":               LocData(base_id + 60, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Torchlit Terror":           LocData(base_id + 61, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Basket Bonanza":            LocData(base_id + 62, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Tippy Traverse":            LocData(base_id + 63, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Meet and Greet":            LocData(base_id + 64, MinigameType.PAIR, WPGroup.PUZZLE),
+    "Win Fishin' Buddies":           LocData(base_id + 65, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Pop Coaster":               LocData(base_id + 66, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Flycycle Team":             LocData(base_id + 67, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Sheep Crossing":            LocData(base_id + 68, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Pump Cart Panic":           LocData(base_id + 69, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Blastronauts":              LocData(base_id + 70, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Rodent Rundown":            LocData(base_id + 71, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Can Poppers":               LocData(base_id + 72, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Spring Ringers":            LocData(base_id + 73, MinigameType.PAIR, WPGroup.PRECISION),
+    "Win Bobsleigh Highway":         LocData(base_id + 74, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Skipping Squad":            LocData(base_id + 75, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Teamwork Temple":           LocData(base_id + 76, MinigameType.PAIR, WPGroup.PUZZLE),
+    "Win Colour Coordination":       LocData(base_id + 77, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Hidden Charms":             LocData(base_id + 78, MinigameType.PAIR, WPGroup.LUCK),
+    "Win Banana Blockade":           LocData(base_id + 79, MinigameType.PAIR, WPGroup.SKILL),
 }
 
 bgi_locations = {
     "Win Board Game Island":         LocData(base_id + 100, None, WPGroup.BOARD_GAME_ISLAND),
-    "Get Past the Dragon Wall":      LocData(base_id + 101, None, WPGroup.BOARD_GAME_ISLAND),
-    "Get Past the Crates & Barrels": LocData(base_id + 102, None, WPGroup.BOARD_GAME_ISLAND),
-    "Get Past the Volcano Pit":      LocData(base_id + 103, None, WPGroup.BOARD_GAME_ISLAND),
+    "Get past the Dragon Wall":      LocData(base_id + 101, None, WPGroup.BOARD_GAME_ISLAND),
+    "Get past the Crates & Barrels": LocData(base_id + 102, None, WPGroup.BOARD_GAME_ISLAND),
+    "Get past the Volcano Pit":      LocData(base_id + 103, None, WPGroup.BOARD_GAME_ISLAND),
     "Get past the Spike Ball":       LocData(base_id + 104, None, WPGroup.BOARD_GAME_ISLAND),
 }
 
@@ -153,9 +155,25 @@ globe_trot_locations = {
     "Win Globe Trot":                LocData(base_id + 200, None, WPGroup.GLOBE_TROT),
 }
 
+ntscu_locations = {
+    "Win Crash Balls":         LocData(base_id + 100000, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Cosmic Capers":       LocData(base_id + 100001, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Rope Sling":          LocData(base_id + 100002, MinigameType.FOUR_PLAYER, WPGroup.SKILL),
+    "Win Risky Railroad":      LocData(base_id + 100003, MinigameType.FOUR_PLAYER, WPGroup.LUCK),
+    "Win Jangle Wranglers":    LocData(base_id + 100004, MinigameType.ONE_VS_ONE, WPGroup.SKILL),
+    "Win Flashlight Frights":  LocData(base_id + 100005, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Clover Hunt":         LocData(base_id + 100006, MinigameType.PAIR, WPGroup.LUCK),
+    "Win Jump Rope Jam":       LocData(base_id + 100007, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Bobsled Highway":     LocData(base_id + 100008, MinigameType.PAIR, WPGroup.SKILL),
+    "Win Color Coordination":  LocData(base_id + 100009, MinigameType.PAIR, WPGroup.REACTION),
+    "Win Moon Landing":        LocData(base_id + 100010, MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
+    "Win Hurdle Hover":        LocData(base_id + 100011, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+}
+
 location_table = {
     **minigame_locations,
     **bgi_locations,
+    **ntscu_locations,
 }
 
 LOCATION_NAME_TO_ID = {location_name: data.id for location_name, data in location_table.items()}
@@ -176,6 +194,16 @@ def get_location_names_with_ids(location_names: list[str]) -> dict[str, int | No
 
 
 def create_regular_locations(world: WiiPartyWorld) -> None:
+
+    def add_location(location: str, region: Region, prefix_to_remove: str):
+        """Adds the location to the selected region based on the selected game region"""
+        pre_removed = location.removeprefix(prefix_to_remove)
+
+        if pre_removed in PAL_TO_NTSCU and world.options.game_region.value == GameRegion.option_NTSCU:
+            location = location.replace(pre_removed, PAL_TO_NTSCU[pre_removed])
+
+        region.add_locations(get_location_names_with_ids([location]))
+
     main_menu = world.get_region("Main Menu")
     bgi = world.get_region("Board Game Island")
     four_minigames = world.get_region("4 Player Minigames")
@@ -221,7 +249,7 @@ def create_regular_locations(world: WiiPartyWorld) -> None:
         # Check .value to see if the user actually enabled both options in their YAML
         if player_option.value and group_option.value:
             region = type_to_region[data.type]
-            region.add_locations(get_location_names_with_ids([minigame_name]))
+            add_location(minigame_name, region, "Win ")
 
     party_name_to_dict = {
         "Board Game Island": bgi_locations
@@ -233,6 +261,10 @@ def create_regular_locations(world: WiiPartyWorld) -> None:
 
     for party_game in world.options.party_games.value:
         for loc in party_name_to_dict[party_game]:
+
+            if world.options.game_region.value == 2 and loc in PAL_TO_NTSCU:
+                loc = PAL_TO_NTSCU[loc]
+
             party_name_to_region[party_game].add_locations(get_location_names_with_ids([loc]))
 
 def create_events(world: WiiPartyWorld) -> None:

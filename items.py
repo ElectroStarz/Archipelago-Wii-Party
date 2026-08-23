@@ -1,6 +1,7 @@
 from typing import Dict, NamedTuple, TYPE_CHECKING
 from BaseClasses import Item, ItemClassification as IC
 from enum import Enum
+from .WPUtils import PAL_TO_NTSCU
 from .options import *
 
 if TYPE_CHECKING:
@@ -17,6 +18,7 @@ class ItemGroup(str, Enum):
     SPIN_OFF = "Spin-Off"
     BINGO = "Bingo"
     MINIGAME = "Minigame"
+    FREE_PLAY = "Free Play"
     FILLER = "Filler"
     TRAPS = "Traps"
 
@@ -95,91 +97,91 @@ bingo_items = {
 # --- Minigame Items ---
 minigame_items = {
     # 4-Player (41)
-    "Derby Dash":          ItemData(base_game_id + 1,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Shifty Gifts":        ItemData(base_game_id + 2,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Chop Chops":          ItemData(base_game_id + 3,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Jumbo Jump":          ItemData(base_game_id + 4,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Popgun Posse":        ItemData(base_game_id + 5,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
-    "Hurdle Hover":        ItemData(base_game_id + 6,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
-    "Puzzle Pick-Up":      ItemData(base_game_id + 7,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PUZZLE),
-    "Lunar Landers":       ItemData(base_game_id + 8,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Zombie Tag":          ItemData(base_game_id + 9,  IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Flag Fracas":         ItemData(base_game_id + 10, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
-    "Smile Snap":          ItemData(base_game_id + 11, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
-    "Dicey Descent":       ItemData(base_game_id + 12, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
-    "Ram Jam":             ItemData(base_game_id + 13, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Feathered Frenzy":    ItemData(base_game_id + 14, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
-    "Goal Getters":        ItemData(base_game_id + 15, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Saucer Snap":         ItemData(base_game_id + 16, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
-    "Quicker Chipper":     ItemData(base_game_id + 17, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
-    "Follow Your Face":    ItemData(base_game_id + 18, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Maze Daze":           ItemData(base_game_id + 19, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PUZZLE),
-    "Chopper Hoppers":     ItemData(base_game_id + 20, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Space Brawl":         ItemData(base_game_id + 21, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Stop Watchers":       ItemData(base_game_id + 22, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
-    "Friendly Face-Off":   ItemData(base_game_id + 23, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PUZZLE),
-    "Barrel Daredevil":    ItemData(base_game_id + 24, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
-    "Ball Brawl":          ItemData(base_game_id + 25, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Tropical Punch":      ItemData(base_game_id + 26, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Strategy Steps":      ItemData(base_game_id + 27, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
-    "Pearl Plunder":       ItemData(base_game_id + 28, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
-    "Hammer Heads":        ItemData(base_game_id + 29, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
-    "Space Race":          ItemData(base_game_id + 30, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Lofty Leap":          ItemData(base_game_id + 31, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Face Flip":           ItemData(base_game_id + 32, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
-    "Spotlight Fight":     ItemData(base_game_id + 33, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
-    "Shutterpup":          ItemData(base_game_id + 34, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
-    "Cry Babies":          ItemData(base_game_id + 35, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
-    "Lucky Launch":        ItemData(base_game_id + 36, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
-    "Back Attack":         ItemData(base_game_id + 37, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Chin-Up Champ":       ItemData(base_game_id + 38, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
-    "Walk-Off":            ItemData(base_game_id + 39, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
-    "Balloon Buggies":     ItemData(base_game_id + 40, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
-    "Risky Railway":       ItemData(base_game_id + 41, IC.filler, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
+    "Derby Dash":          ItemData(base_game_id + 1,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Shifty Gifts":        ItemData(base_game_id + 2,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Chop Chops":          ItemData(base_game_id + 3,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Jumbo Jump":          ItemData(base_game_id + 4,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Popgun Posse":        ItemData(base_game_id + 5,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
+    "Hurdle Hover":        ItemData(base_game_id + 6,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
+    "Puzzle Pick-Up":      ItemData(base_game_id + 7,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PUZZLE),
+    "Lunar Landers":       ItemData(base_game_id + 8,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Zombie Tag":          ItemData(base_game_id + 9,  IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Flag Fracas":         ItemData(base_game_id + 10, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
+    "Smile Snap":          ItemData(base_game_id + 11, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
+    "Dicey Descent":       ItemData(base_game_id + 12, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
+    "Ram Jam":             ItemData(base_game_id + 13, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Feathered Frenzy":    ItemData(base_game_id + 14, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
+    "Goal Getters":        ItemData(base_game_id + 15, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Saucer Snap":         ItemData(base_game_id + 16, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
+    "Quicker Chipper":     ItemData(base_game_id + 17, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
+    "Follow Your Face":    ItemData(base_game_id + 18, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Maze Daze":           ItemData(base_game_id + 19, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PUZZLE),
+    "Chopper Hoppers":     ItemData(base_game_id + 20, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Space Brawl":         ItemData(base_game_id + 21, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Stop Watchers":       ItemData(base_game_id + 22, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
+    "Friendly Face-Off":   ItemData(base_game_id + 23, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PUZZLE),
+    "Barrel Daredevil":    ItemData(base_game_id + 24, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
+    "Ball Brawl":          ItemData(base_game_id + 25, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Tropical Punch":      ItemData(base_game_id + 26, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Strategy Steps":      ItemData(base_game_id + 27, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
+    "Pearl Plunder":       ItemData(base_game_id + 28, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
+    "Hammer Heads":        ItemData(base_game_id + 29, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
+    "Space Race":          ItemData(base_game_id + 30, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Lofty Leap":          ItemData(base_game_id + 31, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Face Flip":           ItemData(base_game_id + 32, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
+    "Spotlight Fight":     ItemData(base_game_id + 33, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
+    "Shutterpup":          ItemData(base_game_id + 34, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.REACTION),
+    "Cry Babies":          ItemData(base_game_id + 35, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
+    "Lucky Launch":        ItemData(base_game_id + 36, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
+    "Back Attack":         ItemData(base_game_id + 37, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Chin-Up Champ":       ItemData(base_game_id + 38, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKILL),
+    "Walk-Off":            ItemData(base_game_id + 39, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.PRECISION),
+    "Balloon Buggies":     ItemData(base_game_id + 40, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.SKLUCK),
+    "Risky Railway":       ItemData(base_game_id + 41, IC.useful, ItemGroup.MINIGAME, MinigameType.FOUR_PLAYER, MinigameGroup.LUCK),
 
     # 1 vs 3 (5)
-    "Splash Bash":         ItemData(base_game_id + 42, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.SKILL),
-    "Lumber Whacks":       ItemData(base_game_id + 43, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.REACTION),
-    "Flying Fruit":        ItemData(base_game_id + 44, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.PRECISION),
-    "Poserobics":          ItemData(base_game_id + 45, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.REACTION),
-    "Hide-and-Peek":       ItemData(base_game_id + 46, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.SKILL),
+    "Splash Bash":         ItemData(base_game_id + 42, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.SKILL),
+    "Lumber Whacks":       ItemData(base_game_id + 43, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.REACTION),
+    "Flying Fruit":        ItemData(base_game_id + 44, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.PRECISION),
+    "Poserobics":          ItemData(base_game_id + 45, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.REACTION),
+    "Hide-and-Peek":       ItemData(base_game_id + 46, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_THREE, MinigameGroup.SKILL),
 
     # 1 vs 1 (11)
-    "Commuter Count":      ItemData(base_game_id + 47, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PRECISION),
-    "Timber Topple":       ItemData(base_game_id + 48, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
-    "Delivery Duel":       ItemData(base_game_id + 49, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PRECISION),
-    "Shepherd Scramble":   ItemData(base_game_id + 50, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
-    "Channel Changers":    ItemData(base_game_id + 51, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.REACTION),
-    "Spring Time":         ItemData(base_game_id + 52, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
-    "Pop-Up Bandits":      ItemData(base_game_id + 53, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.LUCK),
-    "Poppin' Pilots":      ItemData(base_game_id + 54, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
-    "Flag Footrace":       ItemData(base_game_id + 55, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.REACTION),
-    "Roll to the Goal":    ItemData(base_game_id + 56, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PRECISION),
-    "Fruit Focus":         ItemData(base_game_id + 57, IC.filler, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PUZZLE),
+    "Commuter Count":      ItemData(base_game_id + 47, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PRECISION),
+    "Timber Topple":       ItemData(base_game_id + 48, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
+    "Delivery Duel":       ItemData(base_game_id + 49, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PRECISION),
+    "Shepherd Scramble":   ItemData(base_game_id + 50, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
+    "Channel Changers":    ItemData(base_game_id + 51, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.REACTION),
+    "Spring Time":         ItemData(base_game_id + 52, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
+    "Pop-Up Bandits":      ItemData(base_game_id + 53, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.LUCK),
+    "Poppin' Pilots":      ItemData(base_game_id + 54, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.SKILL),
+    "Flag Footrace":       ItemData(base_game_id + 55, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.REACTION),
+    "Roll to the Goal":    ItemData(base_game_id + 56, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PRECISION),
+    "Fruit Focus":         ItemData(base_game_id + 57, IC.useful, ItemGroup.MINIGAME, MinigameType.ONE_VS_ONE, MinigameGroup.PUZZLE),
 
     # Pair (22)
-    "Bumper Crops":        ItemData(base_game_id + 58, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
-    "Robot Factory":       ItemData(base_game_id + 59, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.REACTION),
-    "Paddle Pals":         ItemData(base_game_id + 60, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Torchlit Terror":     ItemData(base_game_id + 61, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Basket Bonanza":      ItemData(base_game_id + 62, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
-    "Tippy Traverse":      ItemData(base_game_id + 63, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Meet and Greet":      ItemData(base_game_id + 64, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PUZZLE),
-    "Fishin' Buddies":     ItemData(base_game_id + 65, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
-    "Pop Coaster":         ItemData(base_game_id + 66, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
-    "Flycycle Team":       ItemData(base_game_id + 67, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Sheep Crossing":      ItemData(base_game_id + 68, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Pump Cart Panic":     ItemData(base_game_id + 69, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Blastronauts":        ItemData(base_game_id + 70, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
-    "Rodent Rundown":      ItemData(base_game_id + 71, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Can Poppers":         ItemData(base_game_id + 72, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
-    "Spring Ringers":      ItemData(base_game_id + 73, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
-    "Bobsleigh Highway":   ItemData(base_game_id + 74, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
-    "Skipping Squad":      ItemData(base_game_id + 75, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.REACTION),
-    "Teamwork Temple":     ItemData(base_game_id + 76, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PUZZLE),
-    "Colour Coordination": ItemData(base_game_id + 77, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.REACTION),
-    "Hidden Charms":       ItemData(base_game_id + 78, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.LUCK),
-    "Banana Blockade":     ItemData(base_game_id + 79, IC.filler, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Bumper Crops":        ItemData(base_game_id + 58, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
+    "Robot Factory":       ItemData(base_game_id + 59, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.REACTION),
+    "Paddle Pals":         ItemData(base_game_id + 60, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Torchlit Terror":     ItemData(base_game_id + 61, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Basket Bonanza":      ItemData(base_game_id + 62, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
+    "Tippy Traverse":      ItemData(base_game_id + 63, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Meet and Greet":      ItemData(base_game_id + 64, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PUZZLE),
+    "Fishin' Buddies":     ItemData(base_game_id + 65, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
+    "Pop Coaster":         ItemData(base_game_id + 66, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
+    "Flycycle Team":       ItemData(base_game_id + 67, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Sheep Crossing":      ItemData(base_game_id + 68, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Pump Cart Panic":     ItemData(base_game_id + 69, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Blastronauts":        ItemData(base_game_id + 70, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
+    "Rodent Rundown":      ItemData(base_game_id + 71, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Can Poppers":         ItemData(base_game_id + 72, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
+    "Spring Ringers":      ItemData(base_game_id + 73, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PRECISION),
+    "Bobsleigh Highway":   ItemData(base_game_id + 74, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
+    "Skipping Squad":      ItemData(base_game_id + 75, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.REACTION),
+    "Teamwork Temple":     ItemData(base_game_id + 76, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.PUZZLE),
+    "Colour Coordination": ItemData(base_game_id + 77, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.REACTION),
+    "Hidden Charms":       ItemData(base_game_id + 78, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.LUCK),
+    "Banana Blockade":     ItemData(base_game_id + 79, IC.useful, ItemGroup.MINIGAME, MinigameType.PAIR, MinigameGroup.SKILL),
 }
 
 filler = {
@@ -187,7 +189,22 @@ filler = {
 }
 
 traps = {
-    "Test Trap": ItemData(base_id + 1025, IC.trap, ItemGroup.TRAPS),
+    "Test Trap": ItemData(base_id + 20000, IC.trap, ItemGroup.TRAPS),
+}
+
+ntscu_items = {
+    "Moon Landing":  ItemData(base_id + 100000, IC.useful, ItemGroup.MINIGAME),
+    "Flap Hurdles":  ItemData(base_id + 100001, IC.useful, ItemGroup.MINIGAME),
+    "Crash Balls":   ItemData(base_id + 100002, IC.useful, ItemGroup.MINIGAME),
+    "Cosmic Capers": ItemData(base_id + 100003, IC.useful, ItemGroup.MINIGAME),
+    "Rope Sling": ItemData(base_id + 100004, IC.useful, ItemGroup.MINIGAME),
+    "Risky Railroad": ItemData(base_id + 100005, IC.useful, ItemGroup.MINIGAME),
+    "Jangle Wranglers": ItemData(base_id + 100006, IC.useful, ItemGroup.MINIGAME),
+    "Flashlight Frights": ItemData(base_id + 100007, IC.useful, ItemGroup.MINIGAME),
+    "Clover Hunt": ItemData(base_id + 100008, IC.useful, ItemGroup.MINIGAME),
+    "Jump Rope Jam": ItemData(base_id + 100009, IC.useful, ItemGroup.MINIGAME),
+    "Bobsled Highway": ItemData(base_id + 100010, IC.useful, ItemGroup.MINIGAME),
+    "Color Coordination": ItemData(base_id + 100011, IC.useful, ItemGroup.MINIGAME),
 }
 
 item_table: Dict[str, ItemData] = {
@@ -199,6 +216,7 @@ item_table: Dict[str, ItemData] = {
     **minigame_items,
     **filler,
     **traps,
+    **ntscu_items,
 }
 
 ITEM_NAME_TO_ID: Dict[str, int] = {item_name: item_data.code for item_name, item_data in item_table.items()}
@@ -222,6 +240,14 @@ def get_random_filler_item_name(world: "WiiPartyWorld") -> str:
 
 def create_all_items(world: "WiiPartyWorld") -> None:
     itempool = []
+
+    def add_item(item: str):
+        """Adds the item to the itempool based on the selected game region"""
+
+        if item in PAL_TO_NTSCU and world.options.game_region.value == GameRegion.option_NTSCU:
+            item = PAL_TO_NTSCU[item]
+
+        itempool.append(world.create_item(item))
 
     party_game_mapping = {
         "Board Game Island": bgi_items,
@@ -249,11 +275,12 @@ def create_all_items(world: "WiiPartyWorld") -> None:
 
     # Add Mode Items if enabled in Party Games options
     for name in world.options.party_games.value:
-        if name in party_game_mapping:
-            game_item_dict = party_game_mapping[name]
-            for item_name, item_data in game_item_dict.items():
-                for _ in range(item_data.quantity):
-                    itempool.append(world.create_item(item_name))
+
+        game_item_dict = party_game_mapping[name]
+        for item_name, item_data in game_item_dict.items():
+
+            for _ in range(item_data.quantity):
+                add_item(item_name)
 
     # Add Minigame items if their player size type and group category options are both active
     for item_name, data in minigame_items.items():
@@ -264,8 +291,9 @@ def create_all_items(world: "WiiPartyWorld") -> None:
         group_option = group_to_option[data.wp_group]
 
         if player_option.value and group_option.value:
+
             for _ in range(data.quantity):
-                itempool.append(world.create_item(item_name))
+                add_item(item_name)
 
 
     number_of_items = len(itempool)
