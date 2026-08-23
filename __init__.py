@@ -80,6 +80,20 @@ class WiiPartyWorld(World):
 
     origin_region_name = "Main Menu"
 
+    ut_generation_options = (
+        "party_games",
+        "four_player_minigames",
+        "one_vs_three_minigames",
+        "one_vs_one_minigames",
+        "pair_minigames",
+        "skill_minigames",
+        "luck_minigames",
+        "skluck_minigames",
+        "reaction_minigames",
+        "precision_minigames",
+        "puzzle_minigames",
+    )
+
     def create_regions(self) -> None:
         regions.create_and_connect_regions(self)
         locations.create_all_locations(self)
@@ -107,11 +121,29 @@ class WiiPartyWorld(World):
     def get_filler_item_name(self) -> str:
         return items.get_random_filler_item_name(self)
 
+    def generate_early(self) -> None:
+        re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+        if re_gen_passthrough and self.game in re_gen_passthrough:
+            slot_data = re_gen_passthrough[self.game]
+            for option_name, value in slot_data.get("options", {}).items():
+                option = getattr(self.options, option_name, None)
+                if option is not None:
+                    setattr(self.options, option_name, option.from_any(value))
+
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, Any]) -> dict[str, Any]:
+        """Request a Universal Tracker regeneration using the seed's slot data."""
+        return slot_data
+
+
    # Stuff to send to the client/tracker because it needs to know that
     def fill_slot_data(self) -> Mapping[str, Any]:
         slot_data = {
         "version": WORLD_VERSION,
         "game_region": self.options.game_region.value,
+        "party_games": self.options.party_games.value,
+
+        "options": self.options.as_dict(*self.ut_generation_options),
         }
 
         return slot_data

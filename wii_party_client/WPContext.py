@@ -18,8 +18,9 @@ from .memory_addresses import *
 
 tracker_loaded = False
 try:
+
     from worlds.tracker.TrackerClient import TrackerGameContext as SuperContext, \
-                                             TrackerCommandProcessor as SuperCommandProcessor
+                                            TrackerCommandProcessor as SuperCommandProcessor
     tracker_loaded = True
 except ModuleNotFoundError:
     from CommonClient import CommonContext as SuperContext, ClientCommandProcessor as SuperCommandProcessor
@@ -44,6 +45,8 @@ status_messages = {
     ConnectionState.SPIN_OFF: "In Spin-Off",
     ConnectionState.BINGO: "In Bingo",
     ConnectionState.MINIGAME: "In a Minigame",
+    ConnectionState.MINI_RESULTS: "In Minigame Results Screen",
+    ConnectionState.PG_RESULTS: "In Party Game Results Screen"
 }
 
 class WPCommandProcessor(SuperCommandProcessor):
@@ -156,7 +159,7 @@ class WPContext(SuperContext):
     connection_state = ConnectionState.DISCONNECTED
     slot_data: dict[str, Any] = {}
     last_error_message: Optional[str] = None
-    auto_start: bool = get_settings()["wp_settings"]["auto_start"]
+    auto_open: bool = get_settings()["wp_settings"]["auto_open"]
 
     def __init__(self, server_address: str, password: str):
         super().__init__(server_address, password)
@@ -494,11 +497,15 @@ class WPContext(SuperContext):
 
     async def handle_button_unlocks(self):
         """Handles the button unlocks for the main menu and some subscreens"""
-        unlock_value = 131065 # This subtracts the Minigames and Rankings button from the original value 131071
+        unlock_value = 131065 # This subtracts the Minigames, Suggestions and Rankings button from the original
+                              # value 131071
 
         button_items = [*self.party_games] # Use * to unpack lists into 1 master list
 
         button_values = {
+            "Suggestions":       1, # Isn't subtracted due to people possibly accessing things they shouldn't be able to
+            "Rankings":          2, # ALREADY SUBTRACTED
+            "Minigames":         4, # ALREADY SUBTRACTED
             "Board Game Island": 8,
             "Globe Trot":        16,
             "Mii of a Kind":     32,
@@ -529,7 +536,7 @@ class WPContext(SuperContext):
         """Main Dolphin loop. Add Wii Party memory reads/writes here as addresses are mapped."""
         while not self.exit_event.is_set():
             try:
-                if self.game_interface.dolphin_client.check_for_dolphin() == 0 and self.auto_start:
+                if self.game_interface.dolphin_client.check_for_dolphin() == 0 and self.auto_open:
                     self.run_wii_party()
                     await asyncio.sleep(2)
 
@@ -575,8 +582,8 @@ class WPContext(SuperContext):
                 await self.handle_received_items()
 
                 # Needs to be happening all the time
-                self.game_interface.dolphin_client.write_word(0x8042fd444, 0x800013B0)
-                self.game_interface.dolphin_client.write_word(0x8042fd440, 0x800014B0)
+                # self.game_interface.dolphin_client.write_word(0x8042fd444, 0x800013B0)
+                # self.game_interface.dolphin_client.write_word(0x8042fd440, 0x800014B0)
 
                 await asyncio.sleep(0.1)
 
@@ -626,6 +633,7 @@ class WPContext(SuperContext):
         """Handles sending minigame checks"""
 
         if not self.game_interface.mini_player_won():
+            print("not win")
             return
 
         _, minigame_name = self.game_interface.get_current_minigame()

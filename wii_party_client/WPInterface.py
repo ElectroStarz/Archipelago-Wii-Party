@@ -374,7 +374,7 @@ class WPInterface:
 
         current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
         string = rel_to_name.get(current_map)
-        non_minigames = ["boot", "loading", "menu", "Board Game Island", "Spin-Off", "Globe Trot",
+        non_minigames = ["boot", "loading", "inst", "menu", "Board Game Island", "Spin-Off", "Globe Trot",
         "Mii of a Kind", "Balance Boat", "Balance Boat Time Attack", "Friend Connection", "Match-Up", "Buddy Quiz",
         "Time Bomb", "Word Bomb", "Animal Tracker", "Quick Draw", "Hide 'n' Hunt", "Bingo", "Rule Reversal", "Battle",
         "Solo", "openmess", "ranking"]
@@ -457,11 +457,17 @@ class WPInterface:
         current_map = self.dolphin_client.read_byte(GameAddresses.current_rel)
         rel = rel_to_name.get(current_map)
 
+        mini_flag = int.from_bytes(mini_in_results, byteorder="big")
+        pg_flag = int.from_bytes(pg_in_results, byteorder="big")
+
         party_games = ["Board Game Island", "Globe Trot", "Mii of a Kind", "Spin-Off", "Bingo"]
 
-        if mini_in_results and rel == "inst":
+        if mini_flag and rel == "inst":
+            # Minigame Results
             return 1
-        elif pg_in_results and self.get_active_mode() in party_games:
+        elif pg_flag and self.get_active_mode() in party_games and rel == self.get_active_mode():
+            # Party Game Result
             return 2
         else:
+            # None
             return 0

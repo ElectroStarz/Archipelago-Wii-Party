@@ -5,6 +5,7 @@ from Options import Choice, OptionSet, PerGameCommonOptions, Range, Toggle, Defa
 class GameRegion(Choice):
     """What region is your game from?
     This will change names of items/locations to match the region"""
+    display_name = "Game Region"
     option_PAL = 1
     option_NTSCU = 2
     default = 1

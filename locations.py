@@ -142,15 +142,20 @@ minigame_locations = {
 }
 
 bgi_locations = {
-    "Get Past the Dragon Wall":      LocData(base_id + 100, None, WPGroup.BOARD_GAME_ISLAND),
-    "Get Past the Crates & Barrels": LocData(base_id + 101, None, WPGroup.BOARD_GAME_ISLAND),
-    "Get Past the Volcano Pit":      LocData(base_id + 102, None, WPGroup.BOARD_GAME_ISLAND),
-    "Get past the Spike Ball":       LocData(base_id + 103, None, WPGroup.BOARD_GAME_ISLAND),
-    "Win Board Game Island":         LocData(base_id + 110, None, WPGroup.BOARD_GAME_ISLAND),
+    "Win Board Game Island":         LocData(base_id + 100, None, WPGroup.BOARD_GAME_ISLAND),
+    "Get Past the Dragon Wall":      LocData(base_id + 101, None, WPGroup.BOARD_GAME_ISLAND),
+    "Get Past the Crates & Barrels": LocData(base_id + 102, None, WPGroup.BOARD_GAME_ISLAND),
+    "Get Past the Volcano Pit":      LocData(base_id + 103, None, WPGroup.BOARD_GAME_ISLAND),
+    "Get past the Spike Ball":       LocData(base_id + 104, None, WPGroup.BOARD_GAME_ISLAND),
+}
+
+globe_trot_locations = {
+    "Win Globe Trot":                LocData(base_id + 200, None, WPGroup.GLOBE_TROT),
 }
 
 location_table = {
     **minigame_locations,
+    **bgi_locations,
 }
 
 LOCATION_NAME_TO_ID = {location_name: data.id for location_name, data in location_table.items()}
@@ -214,7 +219,7 @@ def create_regular_locations(world: WiiPartyWorld) -> None:
         group_option = group_to_option[data.group]
 
         # Check .value to see if the user actually enabled both options in their YAML
-        if player_option in player_option.value and group_option in group_option.value:
+        if player_option.value and group_option.value:
             region = type_to_region[data.type]
             region.add_locations(get_location_names_with_ids([minigame_name]))
 

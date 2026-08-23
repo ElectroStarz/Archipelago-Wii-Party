@@ -226,7 +226,7 @@ def create_all_items(world: "WiiPartyWorld") -> None:
     party_game_mapping = {
         "Board Game Island": bgi_items,
         "Globe Trot": gt_items,
-        "Mii Of A Kind": mii_of_a_kind_items,
+        "Mii of a Kind": mii_of_a_kind_items,
         "Spin-Off": so_items,
         "Bingo": bingo_items
     }
@@ -247,7 +247,7 @@ def create_all_items(world: "WiiPartyWorld") -> None:
         MinigameGroup.SKLUCK: world.options.skluck_minigames,
     }
 
-    # Add Mode Items if enabled in PartyGames options
+    # Add Mode Items if enabled in Party Games options
     for name in world.options.party_games.value:
         if name in party_game_mapping:
             game_item_dict = party_game_mapping[name]
@@ -260,22 +260,22 @@ def create_all_items(world: "WiiPartyWorld") -> None:
         if not data.type or not data.wp_group:
             continue
 
-        player_option = type_to_option.get(data.type)
-        group_option = group_to_option.get(data.wp_group)
+        player_option = type_to_option[data.type]
+        group_option = group_to_option[data.wp_group]
 
-        if player_option and player_option.value and group_option and group_option.value:
+        if player_option.value and group_option.value:
             for _ in range(data.quantity):
                 itempool.append(world.create_item(item_name))
 
 
-        number_of_items = len(itempool)
-        number_of_unfilled_locations = len(world.multiworld.get_unfilled_locations(world.player))
-        needed_number_of_filler_items = number_of_unfilled_locations - number_of_items
-        itempool += [world.create_filler() for _ in range(needed_number_of_filler_items)]
+    number_of_items = len(itempool)
+    number_of_unfilled_locations = len(world.multiworld.get_unfilled_locations(world.player))
+    needed_number_of_filler_items = number_of_unfilled_locations - number_of_items
+    itempool += [world.create_filler() for _ in range(needed_number_of_filler_items)]
 
-        # Submit to multiworld
-        # print(itempool)
-        world.multiworld.itempool += itempool
+    # Submit to multiworld
+    # print(itempool)
+    world.multiworld.itempool += itempool
 
 def create_item_with_correct_classification(world: "WiiPartyWorld", name: str) -> WPItem:
     classification = item_table[name].classification
