@@ -3,6 +3,8 @@ from typing import Any, ClassVar
 from BaseClasses import Tutorial
 import pkgutil
 import json
+import os
+import Utils
 from worlds.AutoWorld import WebWorld, World
 from .options import wii_party_option_groups, WiiPartyOptions
 from . import items, locations, regions, rules
@@ -25,7 +27,6 @@ components.append(
         supports_uri=True,
     )
 )
-
 
 # Find world version
 
@@ -80,8 +81,11 @@ class WiiPartyWorld(World):
 
     origin_region_name = "Main Menu"
 
+    ut_can_gen_without_yaml = True
     ut_generation_options = (
+        "game_region",
         "party_games",
+        "randomise_bgi_spots",
         "four_player_minigames",
         "one_vs_three_minigames",
         "one_vs_one_minigames",
@@ -92,6 +96,7 @@ class WiiPartyWorld(World):
         "reaction_minigames",
         "precision_minigames",
         "puzzle_minigames",
+        "trap_chance",
     )
 
     def create_regions(self) -> None:
@@ -136,7 +141,7 @@ class WiiPartyWorld(World):
         return slot_data
 
 
-   # Stuff to send to the client/tracker because it needs to know that
+    # Stuff to send to the client/tracker because it needs to know that
     def fill_slot_data(self) -> Mapping[str, Any]:
         slot_data = {
         "version": WORLD_VERSION,

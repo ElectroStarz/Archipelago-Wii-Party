@@ -167,13 +167,16 @@ ntscu_locations = {
     "Win Bobsled Highway":     LocData(base_id + 100008, MinigameType.PAIR, WPGroup.SKILL),
     "Win Color Coordination":  LocData(base_id + 100009, MinigameType.PAIR, WPGroup.REACTION),
     "Win Moon Landing":        LocData(base_id + 100010, MinigameType.FOUR_PLAYER, WPGroup.SKLUCK),
-    "Win Hurdle Hover":        LocData(base_id + 100011, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
+    "Win Flap Hurdles":        LocData(base_id + 100011, MinigameType.FOUR_PLAYER, WPGroup.REACTION),
 }
+
+free_locations = {f"Free {i}": LocData(base_id + 20000 + i, MinigameType.FOUR_PLAYER, WPGroup.SKILL) for i in range(50)}
 
 location_table = {
     **minigame_locations,
     **bgi_locations,
     **ntscu_locations,
+    **free_locations
 }
 
 LOCATION_NAME_TO_ID = {location_name: data.id for location_name, data in location_table.items()}
@@ -195,14 +198,15 @@ def get_location_names_with_ids(location_names: list[str]) -> dict[str, int | No
 
 def create_regular_locations(world: WiiPartyWorld) -> None:
 
-    def add_location(location: str, region: Region, prefix_to_remove: str):
+    def add_location(location: str, region: Region):
         """Adds the location to the selected region based on the selected game region"""
-        pre_removed = location.removeprefix(prefix_to_remove)
 
-        if pre_removed in PAL_TO_NTSCU and world.options.game_region.value == GameRegion.option_NTSCU:
-            location = location.replace(pre_removed, PAL_TO_NTSCU[pre_removed])
+        if world.options.game_region.value == GameRegion.option_NTSCU:
+            for pal_pattern, ntscu_replacement in PAL_TO_NTSCU.items():
+                location = re.sub(pal_pattern, ntscu_replacement, location)
 
         region.add_locations(get_location_names_with_ids([location]))
+
 
     main_menu = world.get_region("Main Menu")
     bgi = world.get_region("Board Game Island")
@@ -249,7 +253,10 @@ def create_regular_locations(world: WiiPartyWorld) -> None:
         # Check .value to see if the user actually enabled both options in their YAML
         if player_option.value and group_option.value:
             region = type_to_region[data.type]
-            add_location(minigame_name, region, "Win ")
+            add_location(minigame_name, region)
+
+
+    world.get_region("Board Game Island").add_locations(get_location_names_with_ids([loc for loc in free_locations]))
 
     party_name_to_dict = {
         "Board Game Island": bgi_locations
@@ -262,10 +269,7 @@ def create_regular_locations(world: WiiPartyWorld) -> None:
     for party_game in world.options.party_games.value:
         for loc in party_name_to_dict[party_game]:
 
-            if world.options.game_region.value == 2 and loc in PAL_TO_NTSCU:
-                loc = PAL_TO_NTSCU[loc]
-
-            party_name_to_region[party_game].add_locations(get_location_names_with_ids([loc]))
+            add_location(loc, party_name_to_region[party_game])
 
 def create_events(world: WiiPartyWorld) -> None:
     main_menu = world.get_region("Main Menu")

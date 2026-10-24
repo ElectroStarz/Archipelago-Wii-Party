@@ -1,20 +1,23 @@
 import asyncio
 import logging
-import random
 import traceback
 from collections import deque
 from typing import Dict, Set, Optional, Any
 import subprocess
+import os
+import psutil
 
 import Utils
 from MultiServer import mark_raw
 from NetUtils import ClientStatus, JSONMessagePart
 from settings import get_settings
-from .WPInterface import WPInterface, ConnectionState
 from . import dolphin_connection as dc
-from ..items import item_table
-from ..locations import LOCATION_NAME_TO_ID
+from .WPInterface import WPInterface, ConnectionState
+from .. import WPUtils
 from .memory_addresses import *
+from .common_address_library import AddressLib
+from ..items import item_table, filler,traps
+from ..locations import LOCATION_NAME_TO_ID, location_table
 
 tracker_loaded = False
 try:
@@ -29,16 +32,18 @@ except ModuleNotFoundError:
 YAML_GAME_VERSION = None
 
 
-id_to_name = {data.code: name for name, data in item_table.items()}
+ITEM_ID_TO_NAME = {data.code: name for name, data in item_table.items()}
+LOCATION_ID_TO_NAME = {data.code: name for name, data in location_table.items()}
 CLIENT_VERSION = "0.0.1"
 COMPATIBLE_VERSIONS = []
 CONSUMABLE_STORAGE_CATEGORY = "wii_party"
+MINIGAME_POOL_REWRITE_SECONDS = 2.0
 logger = logging.getLogger("Client")
 
 
 status_messages = {
     ConnectionState.DISCONNECTED: "Unable to connect to the Dolphin instance, attempting to reconnect...",
-    ConnectionState.CONNECTED: "Connected to Dolphin!",
+    ConnectionState.CONNECTED: "Connected to Dolphin but no specific state found...",
     ConnectionState.BGI: "In Board Game Island",
     ConnectionState.GLOBE_TROT: "In Globe Trot",
     ConnectionState.MII_OF_A_KIND: "In Mii of a Kind/Swap Mii",
@@ -115,15 +120,14 @@ class WPCommandProcessor(SuperCommandProcessor):
                     new_pointers.append(int(clean_p, 16))
                 except ValueError:
                     return f"Error: Pointer '{p}' is not valid hex."
-            final_address = self.ctx.game_interface.dolphin_client.follow_pointers(numeric_address,
-                                                                                   new_pointers)
+            final_address = self.ctx.game_interface.dolphin_client.follow_pointers(numeric_address, new_pointers)
         else:
             final_address = numeric_address
 
         client = self.ctx.game_interface.dolphin_client
         result = ""
 
-        match addr_type.lower():
+        match addr_type.casefold():
             case "byte":
                 result = client.read_byte(final_address)
             case "halfword":
@@ -143,9 +147,6 @@ class WPCommandProcessor(SuperCommandProcessor):
         logger.info(f"[Memory Read] {addr_type} at {hex(final_address)}. Result: {result}")
         return result
 
-class RegionMismatchError(Exception):
-    pass
-
 # noinspection PyDeprecation
 # noinspection PyAttributeOutsideInit
 class WPContext(SuperContext):
@@ -159,21 +160,31 @@ class WPContext(SuperContext):
     connection_state = ConnectionState.DISCONNECTED
     slot_data: dict[str, Any] = {}
     last_error_message: Optional[str] = None
-    auto_open: bool = get_settings()["wp_settings"]["auto_open"]
+    settings = get_settings()["wii_party_settings"]
+    auto_open: bool = settings["auto_open"]
+    dolphin_exe_path: str = settings["dolphin_exe_path"]
+    path_to_json: str = settings["wp_json_path"]
 
     def __init__(self, server_address: str, password: str):
         super().__init__(server_address, password)
         self.game_interface = WPInterface(logger)
+        self.addresslib = AddressLib()
         self.items_received = []
         self.items_handled = set()
         self.seed: Optional[str] = None
+        self.start_process = True
 
         # Lists for items
-        self.party_games = []
-        self.minigames = []
+        self.unlocked_party_games = set()
+        self.unlocked_minigames = set()
 
         self.filler_to_give = deque()
         self.traps_to_give = deque()
+
+
+        self.last_button_unlock_value = None
+        self.last_minigame_pool: dict[int, bool] = {}
+        self.last_minigame_pool_write = 0.0
 
 
         self.queued_consumable_indices: Set[int] = set()
@@ -189,9 +200,7 @@ class WPContext(SuperContext):
         self._rate_log_states = {}
 
     # --- Consumable persistence (filler + traps) ---
-    # These are one-shot items tracked by AP received-item index and saved to server storage
-    # so reconnects don't hand them out again. Key is scoped per slot.
-
+    # One-shot items, key is scoped per slot
     @property
     def consumable_storage_key(self) -> Optional[str]:
         if self.seed is None or self.slot is None:
@@ -281,7 +290,7 @@ class WPContext(SuperContext):
         if start_index == 0:
             # CommonContext replaced items_received with a full inventory snapshot.
             # Keep that list and rebuild only unlock state from it.
-            self.reset_local_item_state(clear_received=False)
+            self.reset_local_item_state()
 
         self.debug_log(
             f"ReceivedItems packet start={start_index}, count={len(args['items'])}, "
@@ -296,19 +305,19 @@ class WPContext(SuperContext):
                 continue
 
             item_id = item.item if hasattr(item, "item") else item[0]
-            item_name = id_to_name.get(item_id)
+            item_name = ITEM_ID_TO_NAME.get(item_id)
 
             if not item_name:
                 self.debug_log(f"Skipping unknown item id {item_id} at index {item_index}")
                 continue
 
-            if item_name.startswith("1") or "Charge" in item_name:
+            if item_name in filler:
                 self.filler_to_give.append((item_index, item_name))
                 self.queued_consumable_indices.add(item_index)
                 logger.info(f"Queued filler: {item_name}")
                 self.debug_log(f"Filler queue size is now {len(self.filler_to_give)}")
 
-            elif "Trap" in item_name:
+            elif item_name in traps:
                 self.traps_to_give.append((item_index, item_name))
                 self.queued_consumable_indices.add(item_index)
                 logger.info(f"Queued trap: {item_name}")
@@ -323,7 +332,6 @@ class WPContext(SuperContext):
     def reset_local_item_state(self, clear_received: bool = False, clear_consumed: bool = False) -> None:
         if clear_received:
             self.items_received.clear()
-        pass
 
         if clear_consumed:
             self.filler_to_give.clear()
@@ -345,7 +353,8 @@ class WPContext(SuperContext):
             self.slot_data = args.get("slot_data", {})
 
             global YAML_GAME_VERSION
-            YAML_GAME_VERSION = self.slot_data.get("game_region", None)
+            YAML_GAME_VERSION = self.slot_data.get("game_region", "Unknown")
+            self.enabled_party_games = self.slot_data.get("party_games", ())
 
             # Slot is known now - load/create the per-slot consumable save before items arrive.
             asyncio.create_task(self.load_handled_consumables(initialise=True))
@@ -353,6 +362,10 @@ class WPContext(SuperContext):
                 asyncio.create_task(
                     self.send_msgs([{"cmd": "LocationChecks", "locations": sorted(self.locations_checked)}])
                 )
+
+            if YAML_GAME_VERSION != dc.WP_GAME_VERSION:
+                logger.info(f"Your YAML defined game version ({YAML_GAME_VERSION}) doesn't match your current version ({dc.WP_GAME_VERSION})!\n"
+                            f"Item & Location names won't appear the same!")
 
             generation_version = self.slot_data.get("version", "0.0.1")
 
@@ -375,9 +388,6 @@ class WPContext(SuperContext):
 
         elif cmd == "RoomInfo":
             new_seed = args.get("seed_name", "unknown")
-            if self.seed != new_seed:
-                # New seed - don't carry consumable or location state from the previous room.
-                pass
 
             self.seed = new_seed
 
@@ -465,29 +475,114 @@ class WPContext(SuperContext):
 
     def log_colour(self, text: str, colour: str):
         if self.ui is not None:
-            message: JSONMessagePart = {"type": "color", "text": text, "color": colour}
+            message: JSONMessagePart = {"type": "color", "text": text, "color": colour.casefold()}
             self.ui.print_json([message])
 
 
     # === Utility Functions ===
+
+    @staticmethod
+    def is_dolphin_open() -> bool:
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                name = proc.info["name"].casefold()
+                if (name and "dolphin" in name) and "memoryengine" not in name:
+                    return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+        return False
+
+
+    # === Minigame Handling ===
+
+
+    def get_open_minigame_ids(self) -> set[int]:
+        """IDs of minigames whose "Win <name>" check can still be sent.
+
+        Uses Universal Tracker's available locations if it's loaded, otherwise every missing location."""
+
+        tracker_core = getattr(self, "tracker_core", None)
+        locations = getattr(tracker_core, "locations_available", None)
+        if locations is None:
+            locations = self.missing_locations
+
+        ids = set()
+        for location in locations:
+            if isinstance(location, int):
+                location = LOCATION_ID_TO_NAME.get(location, "")
+            if location.startswith("Win "):
+                minigame_id = WPUtils.minigame_name_to_id(location.removeprefix("Win "))
+                if minigame_id is not None:
+                    ids.add(minigame_id)
+        return ids
+
+    def build_minigame_pool(self) -> dict[int, bool]:
+        """Works out which minigames should be in the roulette, per minigame type.
+
+        Per type: unlocked minigames that still have a check. If none, any unlocked minigame of that type.
+        If the type has nothing unlocked at all, the whole type stays in so the roulette is never empty."""
+
+        unlocked_ids = {WPUtils.minigame_name_to_id(name) for name in self.unlocked_minigames}
+        open_ids = self.get_open_minigame_ids()
+
+        pool = {}
+        for type_name, type_ids in WPUtils.MINIGAME_IDS_BY_TYPE.items():
+            allowed = [mid for mid in type_ids if mid in unlocked_ids and mid in open_ids]
+            if not allowed:
+                allowed = [mid for mid in type_ids if mid in unlocked_ids]
+            if not allowed:
+                self.log_once(f"empty_pool_{type_name}",
+                              f"No unlocked {type_name} minigames, leaving them all in the roulette", True)
+                allowed = type_ids
+
+            for mid in type_ids:
+                pool[mid] = mid in allowed
+        return pool
+
+    async def handle_custom_minigame(self):
+        """Locks the minigame roulette by writing each minigame's in-pool flag in the game's minigame table.
+
+        Rewritten when the pool changes and every few seconds after that, because the game can reset the table."""
+
+        pool = self.build_minigame_pool()
+        now = asyncio.get_event_loop().time()
+
+        if pool == self.last_minigame_pool and now - self.last_minigame_pool_write < MINIGAME_POOL_REWRITE_SECONDS:
+            return
+
+        if pool != self.last_minigame_pool:
+            in_pool = [WPUtils.MINIGAME_DATA[mid][1] for mid, allowed in pool.items() if allowed]
+            self.debug_log(f"Minigame pool updated ({len(in_pool)} in pool): {', '.join(in_pool)}")
+
+        client = self.game_interface.dolphin_client
+        for minigame_id, allowed in pool.items():
+            client.write_byte(WPUtils.MINIGAME_ID_TO_POOL_ADDRESS[minigame_id], 1 if allowed else 0)
+
+        self.last_minigame_pool = pool
+        self.last_minigame_pool_write = now
 
 
     # === Receiving Items ===
 
 
     async def handle_received_items(self):
-        party_games = ("Board Game Island", "Globe Trot", "Mii of a Kind", "Spin-Off", "Bingo")
+        party_games = ("Board Game Island", "Globe Trot", "Mii of a Kind", "Swap Meet", "Spin-Off", "Bingo")
 
         for network_item in self.items_received:
             item_id = network_item.item
-            item_name = id_to_name.get(item_id)
+            item_name = ITEM_ID_TO_NAME.get(item_id)
 
             if network_item not in self.items_handled:
                 if item_name is None:
                     continue
 
                 if item_name in party_games:
-                    self.party_games.append(item_name)
+                    self.unlocked_party_games.add(item_name)
+                    self.debug_log(f"Added {item_name} to party_games")
+
+                if WPUtils.minigame_name_to_id(item_name) is not None:
+                    self.unlocked_minigames.add(item_name)
+                    self.debug_log(f"Added {item_name} to unlocked_minigames")
 
 
             self.items_handled.add(network_item)
@@ -497,10 +592,9 @@ class WPContext(SuperContext):
 
     async def handle_button_unlocks(self):
         """Handles the button unlocks for the main menu and some subscreens"""
-        unlock_value = 131065 # This subtracts the Minigames, Suggestions and Rankings button from the original
-                              # value 131071
+        unlock_value = 131065 # This subtracts the Minigames and Rankings button from the original value 131071
 
-        button_items = [*self.party_games] # Use * to unpack lists into 1 master list
+        button_items = [*self.unlocked_party_games] # Use * to unpack lists into 1 master list
 
         button_values = {
             "Suggestions":       1, # Isn't subtracted due to people possibly accessing things they shouldn't be able to
@@ -509,37 +603,37 @@ class WPContext(SuperContext):
             "Board Game Island": 8,
             "Globe Trot":        16,
             "Mii of a Kind":     32,
+            "Swap Meet":         32, # Same as Mii of a Kind, regional differences
             "Spin-Off":          64,
             "Bingo":             128,
             "Friend Connection": 256,
             "Balance Boat":      512,
             "Match Up":          1024,
-            "House Party":       2048,
+            "House Party":       2048, # Not an item, who even plays these
             "Free Play":         4096,
             "Battle":            8192,
             "Solo":              16384,
             "Challenge":         32768,
             "Rule Reversal":     65536,
+            "Spot the Sneak":    65536, # Same as Rule Reversal, regional differences
         }
 
         for button in button_items:
             if button in button_values:
                 unlock_value &= ~button_values[button]
 
-        self.game_interface.dolphin_client.write_word(MenuAddresses.button_unlock, unlock_value)
+        if unlock_value != self.last_button_unlock_value:
+            self.game_interface.dolphin_client.write_word(MenuAddresses.button_unlock, unlock_value)
+            self.last_button_unlock_value = unlock_value
 
 
     # === Misc Stuff idk where to put ===
 
 
     async def dolphin_sync_task(self) -> None:
-        """Main Dolphin loop. Add Wii Party memory reads/writes here as addresses are mapped."""
+        """Main Dolphin loop. Keeps the game connected to the AP Server"""
         while not self.exit_event.is_set():
             try:
-                if self.game_interface.dolphin_client.check_for_dolphin() == 0 and self.auto_open:
-                    self.run_wii_party()
-                    await asyncio.sleep(2)
-
                 if not self.game_interface.dolphin_client.is_hooked():
                     await self.game_interface.dolphin_client.attempt_to_hook()
 
@@ -560,30 +654,42 @@ class WPContext(SuperContext):
 
                 self.last_error_message = None
 
+                if self.start_process:
+
+                    self.start_process = False
+
                 self.update_connection_status()
 
-                if self.connection_state == ConnectionState.BGI:
-                    await self.handle_in_bgi()
-                elif self.connection_state == ConnectionState.GLOBE_TROT:
-                    await self.handle_in_globe_trot()
-                elif self.connection_state == ConnectionState.MII_OF_A_KIND:
-                    await self.handle_in_mii()
-                elif self.connection_state == ConnectionState.SPIN_OFF:
-                    await self.handle_in_spin_off()
-                elif self.connection_state == ConnectionState.BINGO:
-                    await self.handle_in_bingo()
-                elif self.connection_state == ConnectionState.MINIGAME:
-                    await self.handle_in_minigame()
-                elif self.connection_state == ConnectionState.MINI_RESULTS:
-                    await self.handle_in_mini_results()
-                elif self.connection_state == ConnectionState.PG_RESULTS:
-                    await self.handle_in_pg_results()
+                if self.game_interface.dolphin_client.is_hooked():
 
-                await self.handle_received_items()
+                    if self.connection_state == ConnectionState.MENU:
+                        await self.handle_in_menu()
+                    elif self.connection_state == ConnectionState.BGI:
+                        await self.handle_in_bgi()
+                    elif self.connection_state == ConnectionState.GLOBE_TROT:
+                        await self.handle_in_globe_trot()
+                    elif self.connection_state == ConnectionState.MII_OF_A_KIND:
+                        await self.handle_in_mii()
+                    elif self.connection_state == ConnectionState.SPIN_OFF:
+                        await self.handle_in_spin_off()
+                    elif self.connection_state == ConnectionState.BINGO:
+                        await self.handle_in_bingo()
+                    elif self.connection_state == ConnectionState.MINIGAME:
+                        await self.handle_in_minigame()
+                    elif self.connection_state == ConnectionState.MINI_RESULTS:
+                        await self.handle_in_mini_results()
+                    elif self.connection_state == ConnectionState.PG_RESULTS:
+                        await self.handle_in_pg_results()
 
-                # Needs to be happening all the time
-                # self.game_interface.dolphin_client.write_word(0x8042fd444, 0x800013B0)
-                # self.game_interface.dolphin_client.write_word(0x8042fd440, 0x800014B0)
+                    if self.connection_state not in [ConnectionState.MENU, ConnectionState.PG_RESULTS]:
+                        await self.handle_custom_minigame()
+
+                    await self.handle_received_items()
+
+                    # Needs to be happening all the time
+                    # Saulf Patches??? I forgot what this was for
+                    self.game_interface.dolphin_client.write_bytes(0x8042fd444, 0x800013B0)
+                    self.game_interface.dolphin_client.write_bytes(0x8042fd440, 0x800014B0)
 
                 await asyncio.sleep(0.1)
 
@@ -597,16 +703,17 @@ class WPContext(SuperContext):
                     logger.error(f"Sync Task Error:\n{traceback.format_exc()}")
                 await asyncio.sleep(3)
 
-    @staticmethod
-    def run_wii_party():
-        """Automatically runs Wii Party with our patches though a command"""
+    def run_wii_party(self):
+        """
+        Runs Wii Party with our patches though a command
+        Automatically disables RetroAchievements and other cheats that may mess with this
+        """
 
-        dolphin_exe_path: str = get_settings()["wp_settings"]["dolphin_exe_path"]
-        path_to_json: str = "NONE - PLEASE REPLACE LATER"
+        # Need to figure out some way of getting the riivolution to the user, might just store it in the user's
+        # dolphin appdata folder idk
 
-        subprocess.run([f"{dolphin_exe_path} --exec={path_to_json} -b --config=Dolphin.Core.EnableCheats=False "
+        subprocess.run([f"{self.dolphin_exe_path} --exec={self.path_to_json} -b --config=Dolphin.Core.EnableCheats=False "
                         f"--config=Achievements.Achievements.Enabled=False"])
-
 
 
     # === Location Handling ===
@@ -633,13 +740,14 @@ class WPContext(SuperContext):
         """Handles sending minigame checks"""
 
         if not self.game_interface.mini_player_won():
-            print("not win")
             return
 
-        _, minigame_name = self.game_interface.get_current_minigame()
+        type, name = self.game_interface.get_current_minigame()
 
-        await self.check_location(f"Win {minigame_name}")
+        if type not in self.unlocked_party_games:
+            return
 
+        await self.check_location(f"Win {name}")
 
     async def handle_win_pg_checks(self):
         """Handles sending the win Party Game checks"""
@@ -649,10 +757,39 @@ class WPContext(SuperContext):
 
         mode = self.game_interface.get_active_mode()
 
+        if mode not in self.unlocked_minigames:
+            return
+
         await self.check_location(f"Win {mode}")
+
+    async def handle_bgi_obstacle_checks(self):
+        """Handles sending the checks for getting past obstacles in Board Game Island, could be improved.
+
+        Currently, checks how far away the player is from the goal, determines if they are physically past the obstacle"""
+
+        p1_spots_left = self.game_interface.dolphin_client.read_pointer(self.addresslib.bgi_data,
+                                                                        Pointers.BGI.p1_to_goal,
+                                                                        "word")
+
+        if p1_spots_left > 73 or p1_spots_left < 0:
+            return
+
+        if p1_spots_left < 51:
+            await self.check_location("Get past the Dragon Wall")
+
+        if p1_spots_left < 34:
+            await self.check_location("Get past the Crates & Barrels")
+
+        if p1_spots_left < 28:
+            await self.check_location("Get past the Volcano Pit")
+
+        if p1_spots_left < 17:
+            await self.check_location("Get past the Spike Ball")
 
     # === Where to handle what ===
 
+    async def handle_in_menu(self):
+        await self.handle_bgi_obstacle_checks()
 
     async def handle_in_bgi(self):
         pass

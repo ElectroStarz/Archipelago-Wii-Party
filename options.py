@@ -21,8 +21,8 @@ class PartyGames(OptionSet):
     """Which party games do you want included?
 (Board Game Island, Globe Trot, Mii of a Kind (Swap Meet), Spin-Off, Bingo)"""
     display_name = "Party Games"
-    valid_keys = {"Board Game Island", "Globe Trot", "Mii of a Kind", "Spin-Off", "Bingo"}
-    default = {"Board Game Island", "Globe Trot", "Mii of a Kind", "Spin-Off", "Bingo"}
+    valid_keys = {"Board Game Island"}#, "Globe Trot", "Mii of a Kind", "Spin-Off", "Bingo"}
+    default = {"Board Game Island"}#, "Globe Trot", "Mii of a Kind", "Spin-Off", "Bingo"}
 
 class RandomiseBGISpots(Toggle):
     """Randomise the spots on Board Game Island (Credit of Dorian)"""

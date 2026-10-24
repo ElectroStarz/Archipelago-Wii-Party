@@ -7,7 +7,7 @@ from .WPContext import WPContext, logger
 
 
 def launch_wii_party_client(*args):
-    Utils.init_logging("Mario Sports Mix Client")
+    Utils.init_logging("Wii Party Client")
 
     async def main(main_args):
         multiprocessing.freeze_support()
@@ -23,7 +23,9 @@ def launch_wii_party_client(*args):
             ctx.run_gui()
         ctx.run_cli()
 
-        logger.info("Running game...")
+        if ctx.auto_open and not ctx.is_dolphin_open():
+            ctx.run_wii_party()
+
         ctx.dolphin_sync_task = asyncio.create_task(ctx.dolphin_sync_task(), name="Dolphin Sync")
 
         await ctx.exit_event.wait()
